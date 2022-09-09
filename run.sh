@@ -15,6 +15,6 @@ ssh -tt ${TARGET_HOST} << EOF
 sudo killall led-matrix-controller
 cd ${TARGET_PATH}
 cargo build
-./target/debug/led-matrix-controller
+sudo ./target/debug/led-matrix-controller
 exit
 EOF
