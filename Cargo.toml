@@ -4,9 +4,24 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Conrad Klaus"]
 license = "GPL-3.0"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+default-run = "main"
 
 [dependencies]
-rpi-led-matrix = "0.4.0"
+rpi-led-matrix = { version = "0.4.0", optional = true}
 cascade = "1.0.0"
 embedded-graphics = "0.7.1"
+embedded-graphics-simulator = { version = "0.3.0", optional = true}
+
+[features]
+default = ["rpi-led-matrix"]
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+required-features = ["rpi-led-matrix"]
+
+# cargo run with --no-default-features flag
+[[bin]]
+name = "simulate-display"
+path = "src/simulatedDisplay.rs"
+required-features = ["embedded-graphics-simulator"]

@@ -18,6 +18,14 @@ On your rpi:
 More tips:
 - [Headless raspberry pi setup][Headless-rpi-setup]
 
+## Simulate Display
+
+On your pc:
+1. Install [Rust][Rust-installation-guide]
+2. clone repo
+3. ```./run.sh run --simulate```
+4. done
+
 ## Cross Compile
 
 The detailed [guide][Rust-cross-compile] covers most of the information.
