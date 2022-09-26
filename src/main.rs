@@ -1,10 +1,12 @@
-mod draw;
+mod render_engine;
 
 use cascade::cascade;
 use rpi_led_matrix::{LedMatrix, LedMatrixOptions, LedRuntimeOptions};
-use draw::draw;
+use render_engine::draw;
+use std::time::{Instant};
 
 fn main() {
+    let now = Instant::now();
     let options = cascade! {
         LedMatrixOptions::new();
         ..set_rows(64);
@@ -18,11 +20,11 @@ fn main() {
         ..set_gpio_slowdown(3);
     };
     let matrix = LedMatrix::new(Some(options), Some(rt_options)).unwrap();
-    let mut canvas = matrix.canvas();
-
-    draw(&mut canvas);
+    let mut canvas = matrix.offscreen_canvas();
 
     loop {
-        std::thread::sleep(std::time::Duration::from_millis(50));
+        draw(&mut canvas, now.elapsed().as_secs_f32());
+        canvas = matrix.swap(canvas);
+        canvas.clear();
     }
 }
