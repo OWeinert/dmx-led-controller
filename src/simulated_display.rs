@@ -6,7 +6,7 @@ use embedded_graphics::prelude::*;
 use embedded_graphics_simulator::{
     OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
-use render_engine::draw;
+use render_engine::{Engine};
 use std::time::{Instant};
 
 fn main() {
@@ -21,11 +21,18 @@ fn main() {
         ..update(&display);
     };
 
+    let str = [
+        "src/objects/cube.obj",
+        "src/objects/video_ship.obj",
+        "src/objects/teapot.obj"
+    ];
+    let engine = Engine::new(&str[0], &mut display);
+
     'running: loop {
         if window.events().any(|e| e == SimulatorEvent::Quit) {
             break 'running;
         }
-        draw(&mut display, now.elapsed().as_secs_f32());
+        engine.draw(&mut display, now.elapsed().as_secs_f32());
         window.update(&display);
         display.clear(Rgb888::new(0, 0, 0)).unwrap();
     }
