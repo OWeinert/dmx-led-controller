@@ -6,10 +6,7 @@
 \setcounter{tubdeko}{0}
 \newcounter{tubnavigation}
 \setcounter{tubnavigation}{0}
-\DeclareOption{Nike}{\def\FileName{Nike}\setcounter{tubdeko}{1}}
-\DeclareOption{Haus}{\def\FileName{Haus}\setcounter{tubdeko}{2}}
-\DeclareOption{Aussicht}{\def\FileName{Aussicht}\setcounter{tubdeko}{3}}
-\DeclareOption{Leer}{\def\Filename{}\setcounter{tubdeko}{0}}
+\DeclareOption{Nike}{\def\FileName{pictures/Nike}\setcounter{tubdeko}{1}}
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{beamer}}
 \ProcessOptions\relax
 \LoadClass[xcolor=table,hyperref={bookmarks},9pt,t]{beamer}  % pdfpagemode=FullScreen
@@ -43,17 +40,13 @@
 
 \newcommand*{\lengthinmm}[1]{\strip@pt\dimexpr0.35149804\dimexpr#1\relax\relax}
 \newcommand{\smallcirc}{\begin{picture}(2,2)\put(1,0.9){\circle*{0.88}}\end{picture}}
-\newcommand{\Nike}{\def\FileName{Nike}\setcounter{tubdeko}{1}}
-\newcommand{\Haus}{\def\FileName{Haus}\setcounter{tubdeko}{2}}
-\newcommand{\Aussicht}{\def\FileName{Aussicht}\setcounter{tubdeko}{3}}
-\newcommand{\Leer}{\setcounter{tubdeko}{0}}
-\newcommand{\sehrLeer}{\setcounter{tubdeko}{-1}}
+\newcommand{\Nike}{\def\FileName{pictures/Nike}\setcounter{tubdeko}{1}}
 \newcommand{\pagename}{Seite} % Definition wird vom babel-Paket ueberschrieben
 \newcommand{\hurz}{\mbox{~\textbar~}}
 
 \linespread{1.1}
 \newcommand{\leer}{}
-\newcommand{\pathtologo}{TU_Logo_lang_RGB_rot}
+\newcommand{\pathtologo}{pictures/TU_Logo_lang_RGB_rot}
 %\newcommand{\pathtologo}{test}
 \newcommand{\pathtomylogo}{}
 
@@ -205,7 +198,7 @@
 \setbeamercolor{frametitle}{fg=TUred}
 \setbeamercolor{item}{fg=black}
 \setbeamercolor{navigation symbols}{fg=grau}
-\setbeamercolor{section in toc}{fg=TUred}
+\setbeamercolor{section in toc}{fg=black}
 \setbeamercolor{titlelike}{fg=TUred}
 \setbeamercolor{footline}{fg=grau}
 
@@ -216,7 +209,7 @@
 \setbeamerfont{title}{size=\fontsize{12}{12}\selectfont}
 \setbeamerfont{title in head}{series=\bfseries}
 \setbeamerfont{frametitle}{size=\large}
-\setbeamerfont{section in toc}{series=\bfseries}
+%\setbeamerfont{section in toc}{series=\bfseries}
 
 \setbeamerfont*{itemize/enumerate body}{parent=normal text}
 \setbeamerfont*{itemize/enumerate subbody}{parent=itemize/enumerate body}

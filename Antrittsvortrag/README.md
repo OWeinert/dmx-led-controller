@@ -1,1 +1,0 @@
-Präsentationsvorlage im Corporate Design der TU Berlin
