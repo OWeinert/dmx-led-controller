@@ -1,0 +1,59 @@
+% Chapter Template
+
+\chapter{Thematik} % Main chapter title
+
+\label{ChapterThematik} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterThematik}
+
+\lhead{Vorstellung der geplanten Bachelorarbeit}
+
+%----------------------------------------------------------------------------------------
+%	SECTION 1
+%----------------------------------------------------------------------------------------
+
+\section{Vorstellung der geplanten Bachelorarbeit}
+
+In der Bühnen- und Lichttechnik wird großer Wert darauf gelegt, die Lichter passend zum Ereignis abzustimmen. Bei Musikveranstaltungen und Bühnenauftritten werden alle Lichter meist über ein gemeinsames Protokoll angesteuert. Aus der Vergangenheit heraus hat sich das "Digital Multiplex" (kurz DMX) Protokoll besonders durchgesetzt. DMX kann die Helligkeit und die Farben der Lichter steuern. Aber auch Scheinwerfer können durch das Protokoll bewegt und Stroboskope angesteuert werden. Es gibt neben DMX auch noch andere Protokolle, wie zum Beispiel DALI (Digital Addressable Lighting Interface). DALI ist ein dezentralisiertes System und ist im Vergleich zu DMX langsamer. Beim DALI Protokoll können die einzigen Lichter untereinander kommunizieren.  DMX setzt dagegen auf einen zentralen Controller, der alle angeschlossenen Lichter kontrolliert. Das DMX Protokoll läuft mit einer Bitrate von 250 kbit/s.
+
+In dieser Bachelorarbeit soll ein Prototyp gebaut werden, um die Aufbaustruktur vom DMX Protokoll zu veranschaulichen und mit anderen Protokollen wie z.B. dem DALI Protokoll zu vergleichen. Das DMX Protokoll kann bis zu 512 Kanäle kontrollieren. Dabei kann jeder Kanal einen Wertebereich von 0 bis 255 annehmen. Eine mögliche Konfiguration ist beispielsweise, dass jeder Kanal eine Lampe steuert und der Wert vom Kanal auf die Helligkeit der Lampe abgebildet wird. Um die vielen Kanäle und deren Wertebereich abzubilden, wird in der Bachelorarbeit eine LED-Matrix verwendet.
+
+Eine LED-Matrix ist ein Bildschirm mit einer kleinen Auflösung. Sie werden gerne auf Konzerten und für Werbebanner benutzt. Jeder Pixel entspricht einer kleinen LED, die in einem Raster angeordnet ist. Eine gängige Auflösung von einer Platte ist zum Beispiel 64x64 Pixel. Es können jedoch mehrere Platten einfach kombiniert werden, um größere Bildschirme mit einer höheren Auflösung aufzubauen. Auf dieser LED-Matrix kann zum Beispiel jede Spalte einem DMX Kanal entsprechen und jede Zeile den entsprechenden Wertebereich abbilden. Auch kann eine Animation auf der LED-Matrix gerendert werden, und die Parameter der Animation per DMX Protokoll eingestellt werden. So könnte die Farbe, die Geschwindigkeit und noch vieles weitere per DMX angesteuert werden. 
+
+\section{Problemstellung}
+DMX ist ein weitverbreitetes Protokoll. In der Industrie wird es bei fast allen Computer gesteuerten Lichtern angewendet. Der genaue Aufbau und die Funktionsweise des DMX Protokolls wird bis jetzt aber noch nicht sinnvoll und klar dargestellt. In Datenblättern werden zwar die genauen Timings und Abläufe ausführlich aufgelistet, für die Lehre bietet es sich aber oft an, die Theorie greifbar zu machen und das Thema durch einen neuen Blickwinkel interessant darzustellen. Die Bachelorarbeit macht das DMX Protokoll visuell fassbar. Solch ein Projekt gibt es in dieser Ausführung noch nicht. Für die Lehre bietet es einen didaktischen Mehrwert. Die Arbeit wird zusammen mit dem Source Code und einer Dokumentation veröffentlicht, die es jedem ermöglicht, das Projekt selbst nachzubauen und es zu erweitern. 
+
+\section{Umsetzung}
+Die Koordination zwischen DMX Protokoll und LED Matrix wird ein Raspberry Pi (kurz RPI) übernehmen. Es gibt bereits "of the shelve" Komponenten, die es ermöglichen, eine LED Matrix über einen Raspberry Pi anzusteuern. Leider gibt es aber noch keine Komponenten oder Libraries, die es ermöglichen, das DMX Protokoll über den RPI als Slave zu empfangen. Dafür wird in der Bachelorarbeit eine Platine entwickelt, die sowohl die LED Matrix ansteuert, als auch eine Verbindung zwischen DMX Kabel und dem RPI aufbaut. Weiterhin wird ein eigener Treiber entwickelt, der das DMX Protokoll empfängt.
+
+Die Bildschirmansteuerung lässt viele Möglichkeiten für die Demonstrierung des DMX Protokolls zu. Eine einfache Möglichkeit wurde bereits angesprochen: die DMX Kanäle und den Wertebereich auf die Spalten und Reihen der LED Matrix abzubilden. Als weiteren Ausblick können selbst programmierte Animationen vom Protokoll gesteuert werden. Beispielsweise wird eine eigene 3D Rendering Engine verwendet, um 3D Objekte auf der Matrix abzubilden. Das DMX Protokoll kann dann die Rotation in X, Y und Z Achse sowie die Farbe und die Größe eines Würfels oder eines anderen Objektes kontrollieren.
+
+Um das ganze Projekt abzurunden, wird es dann mit einem Gehäuse geschützt.
+
+\section{Zeitplan}
+Für die Bachelorarbeit werden 20 Wochen Bearbeitungszeitraum angeschlagen. Ich orientiere mich an folgenden Zeitplan:
+
+\begin{center}
+	\begin{tabular}{ | c | *{6}{c} | }
+		\hline
+		\multirow{2}{*}{Zeitplan}\ & \multicolumn{6}{c | }{Woche} \\ 
+		& 1-3 & 4-6 & 7-9 & 10-13 & 14-17 & 18-20 \\
+		\hline
+		LED Matrix Ansteuerung		& x & & & & & \\
+		LED Matrix Animationen		& & x & & & & \\
+		DMX Kanäle/ Paket Visualisierung		& & x & & & & \\
+		\hline
+		Raspberry Pi DMX Treiber	& x & & & & & \\
+		Raspberry Pi HAT Platine	& & x & & & & \\
+		Gehäuse									& & & x & & & \\
+		\hline
+		Projekt Dokumentation			& & & x & & & \\
+		Evaluierung								& & & & x & & \\
+		Rohtext verfassen					& & & & x & x & \\
+		Feedback \& Überarbeitung		& & & & & x & x \\
+		Schlusskorrektur					& & & & & & x \\
+		Abgabe										& & & & & & x\\
+		\hline
+	\end{tabular}
+\end{center}
+
+\section{Literatur}
+Für die Bachelorarbeit werde ich viele Protokolle, Normen und vor allem Datenblätter zitieren, da ich den Aufbau so nah wie möglich an bewerte Standards halten möchte. Das beschleunigt den Arbeitsprozess und erspart (hoffentlich) eine lange Fehlersuche. Vor allem für das DMX Protokoll ist das notwendig. Weiterhin vergleiche ich meine Umsetzung mit anderen Herangehensweisen. Ich kann dabei das Paper "Embedded systems for controlling LED matrix displays"\citep{embedded_LED_Matrix} oder auch das Paper "A study of communication protocols and wireless networking systems for lighting control application"\citep{communication_protocols} heranziehen.

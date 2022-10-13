@@ -155,6 +155,7 @@
 \newcommand\addtotoc[1]{
 \refstepcounter{dummy}
 \addcontentsline{toc}{chapter}{#1}}
+\renewcommand{\chaptername}{Kapitel}
 \renewcommand{\contentsname}{Inhaltsangabe}
 \renewcommand\tableofcontents{
 \begin{spacing}{1}{

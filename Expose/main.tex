@@ -55,6 +55,11 @@
 \usepackage{breqn}
 \usepackage{rotating}
 \usepackage{float}
+\usepackage{titlesec}
+\usepackage[T1]{fontenc}
+\usepackage{tgpagella}
+
+
 
 \hypersetup{urlcolor=blue, colorlinks=true} % Colors hyperlinks in blue - change to black if annoying
 \title{\ttitle} % Defines the thesis title - don't touch this
@@ -73,6 +78,9 @@
 \pagestyle{fancy} % Finally, use the "fancy" page style to implement the FancyHdr headers
 
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % New command to make the lines in the title page
+
+\titleformat{\chapter}[display] % Remove Chapter 1 ...
+{\normalfont\bfseries}{}{0pt}{\Huge}
 
 % PDF meta-data
 \hypersetup{pdftitle={\ttitle}}
@@ -101,7 +109,7 @@
 \pagestyle{fancy} % The page style headers have been "empty" all this time, now use the "fancy" headers as defined before to bring them back
 
 % Include the chapters of the thesis as separate files from the Chapters folder
-\input{Chapters/ChapterTemplate}
+\input{Chapters/Expose.tex}
 
 \backmatter
 
