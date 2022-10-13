@@ -12,7 +12,7 @@
 On your rpi:
 1. Install [Rust][Rust-installation-guide]
 2. clone repo
-3. ```./run.sh```
+3. ```./code/run.sh```
 4. done
 
 More tips:
@@ -23,7 +23,7 @@ More tips:
 On your pc:
 1. Install [Rust][Rust-installation-guide]
 2. clone repo
-3. ```./run.sh run --simulate```
+3. ```./code/run.sh run --simulate```
 4. done
 
 ## Cross Compile
@@ -34,13 +34,13 @@ Configure the ```CrossCompileConfig.toml``` to use the right compiler
 and also configure ```run.sh``` to use the right target host.
 
 Then run
-```./run.sh --deploy```.
+```./code/run.sh --deploy```.
 
 ## Remote Debugging
 
 Configure ```run.sh```.
 
-Then run ```./run.sh --gdbserver``` in one terminal
+Then run ```./code/run.sh --gdbserver``` in one terminal
 and use Bundled GDB for remote debugging.
 
 ## Built With
