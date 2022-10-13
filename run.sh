@@ -10,7 +10,7 @@ readonly TARGET_DIR=/home/pi
 readonly SOURCE_BIN=./target/aarch64-unknown-linux-gnu/debug/main
 
 cross_compile_and_sync() {
-    cargo build --config=CrossCompileConfig.toml
+    cargo build --bin main --package led-matrix-controller --config=CrossCompileConfig.toml --features="rpi-led-matrix"
     rsync ${SOURCE_BIN} ${TARGET_HOST}:${TARGET_DIR}/
 }
 

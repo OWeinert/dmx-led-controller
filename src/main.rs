@@ -1,12 +1,11 @@
 mod render_engine;
 
 use cascade::cascade;
-use rpi_led_matrix::{LedMatrix, LedMatrixOptions, LedRuntimeOptions};
-use render_engine::{Engine};
 use std::time::{Instant};
+use render_engine::{Engine, Parameter};
+use rpi_led_matrix::{LedMatrix, LedMatrixOptions, LedRuntimeOptions};
 
 fn main() {
-    let now = Instant::now();
     let options = cascade! {
         LedMatrixOptions::new();
         ..set_rows(64);
@@ -14,6 +13,7 @@ fn main() {
         ..set_pwm_lsb_nanoseconds(300);
         ..set_hardware_pulsing(true);
         ..set_brightness(50).unwrap();
+        ..set_refresh_rate(false);
     };
     let rt_options = cascade! {
         LedRuntimeOptions::new();
@@ -27,10 +27,20 @@ fn main() {
         "src/objects/video_ship.obj",
         "src/objects/teapot.obj"
     ];
-    let engine = Engine::new(&str[0], &mut canvas);
+    let mut engine = Engine::new(&str[0], &mut canvas);
+    let mut last: Instant = Instant::now();
 
     loop {
-        engine.draw(&mut canvas, now.elapsed().as_secs_f32());
+        let now = Instant::now();
+        let parameter = Parameter{
+            eye: Default::default(),
+            rotation: 0.015,
+            elapsed_time: now - last,
+            print_state: false
+        };
+
+        engine.on_user_update(&mut canvas, parameter);
+        last = now;
         canvas = matrix.swap(canvas);
         canvas.clear();
     }

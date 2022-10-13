@@ -8,9 +8,9 @@ default-run = "main"
 
 [dependencies]
 rpi-led-matrix = { version = "0.4.0", optional = true}
+embedded-graphics-simulator = { version = "0.4.0", optional = true}
 cascade = "1.0.0"
 embedded-graphics = "0.7.1"
-embedded-graphics-simulator = { version = "0.4.0", optional = true}
 nalgebra = "0.31.1"
 wavefront_obj = "10.0.0"
 
