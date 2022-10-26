@@ -139,7 +139,7 @@
 %	defined as \examname above so you cite it as \examname
 %----------------------------------------------------------------------------------------
 
-\thesistitle{Exposé: Veranschaulichung digitaler Steuerprotokolle in der Lichttechnik} % Your thesis title - this is used in the title
+\thesistitle{Exposé: Veranschaulichung verschiedener Lichtsteuerprotokolle} % Your thesis title - this is used in the title
 %-------------------------------------------------
 \authors{Klaus, Conrad Yosemite} % Your name - this is used in the title page
 %-------------------------------------------------
