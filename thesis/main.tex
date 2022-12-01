@@ -21,13 +21,15 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%----------------------------------------------------------------------------------------
-%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
-%----------------------------------------------------------------------------------------
 
-\documentclass[11pt, openany]{Thesis} % The default font size and one-sided printing (no margin offsets)
+% -----------------------
+% --- Document config ---
+% -----------------------
 
-\graphicspath{{Pictures/}} % Specifies the directory where pictures are stored
+% default font size, one-sided printing (no margin offsets)
+\documentclass[11pt, oneside]{Thesis}
+
+\graphicspath{{Pictures/}} % directory of pictures
 
 \usepackage[square, numbers, comma, sort&compress]{natbib} 
 \usepackage{amsmath}
@@ -56,60 +58,43 @@
 \usepackage{rotating}
 \usepackage{float}
 
-\hypersetup{urlcolor=blue, colorlinks=true} % Colors hyperlinks in blue - change to black if annoying
 \title{\ttitle} % Defines the thesis title - don't touch this
 
 \begin{document}
 
-\frontmatter % Use roman page numbering style (i, ii, iii, iv...) for the pre-content pages
 
-\setstretch{1.3} % Line spacing of 1.3
-
-% Define the page headers using the FancyHdr package and set up for one-sided printing
-\fancyhead{} % Clears all page headers and footers
-\rhead{\thepage} % Sets the right side header to show the page number
-\lhead{} % Clears the left side page header
-
-\pagestyle{fancy} % Finally, use the "fancy" page style to implement the FancyHdr headers
-
-\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % New command to make the lines in the title page
+\setstretch{1.5} % Line spacing of 1.3
 
 % PDF meta-data
 \hypersetup{pdftitle={\ttitle}}
-\hypersetup{pdfsubject=\subjectname}
-\hypersetup{pdfauthor=\authornames}
-\hypersetup{pdfkeywords=\keywordnames}
+\hypersetup{pdfauthor=\authorname}
 
-%----------------------------------------------------------------------------------------
-%	COVER
-%----------------------------------------------------------------------------------------
+\frontmatter
+% Cover
 \input{cover}
 
+% Statement
+\input{statement}
 
-%----------------------------------------------------------------------------------------
-%	LIST OF CONTENTS/FIGURES/TABLES PAGES
-%----------------------------------------------------------------------------------------
-\lhead{\emph{Table of Contents}} % Set the left side page header to "Table of Contents"
-\tableofcontents % Write out the Table of Contents
+% Abstract
+\input{abstract}
 
 
-%----------------------------------------------------------------------------------------
-%	THESIS CONTENT - CHAPTERS
-%----------------------------------------------------------------------------------------
-\mainmatter % Begin numeric (1,2,3...) page numbering
+% List of contents, figures, table pages
+\cleardoublepage
+\tableofcontents
 
+\mainmatter	% Begin numeric (1,2,3...) page numbering
 \pagestyle{fancy} % The page style headers have been "empty" all this time, now use the "fancy" headers as defined before to bring them back
 
-% Include the chapters of the thesis as separate files from the Chapters folder
 \input{Chapters/ChapterTemplate}
 
-\backmatter
 
-%----------------------------------------------------------------------------------------
-%	BIBLIOGRAPHY
-%----------------------------------------------------------------------------------------
+% --------------------
+% --- Bibliography ---
+% --------------------
 \label{Bibliography}
-
+\addtotoc{Bibliography}
 \lhead{\emph{Bibliography}} % Change the page header to say "Bibliography"
 
 \bibliographystyle{unsrtnat} % Use the "unsrtnat" BibTeX style for formatting the Bibliography
