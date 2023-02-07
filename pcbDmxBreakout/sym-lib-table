@@ -1,3 +1,7 @@
 (sym_lib_table
   (lib (name "B0505LS-1WR3")(type "KiCad")(uri "${KIPRJMOD}/lib/B0505LS-1WR3.kicad_sym")(options "")(descr ""))
+  (lib (name "Screw Terminal")(type "KiCad")(uri "${KIPRJMOD}/lib/MPT_0_5__2-2_54_1725656.kicad_sym")(options "")(descr ""))
+  (lib (name "XLR Female")(type "KiCad")(uri "${KIPRJMOD}/lib/NC3FAH2.kicad_sym")(options "")(descr ""))
+  (lib (name "XLR Male")(type "KiCad")(uri "${KIPRJMOD}/lib/NC3MAH.kicad_sym")(options "")(descr ""))
+  (lib (name "Logo Lichttechnik")(type "KiCad")(uri "${KIPRJMOD}/lib/LogoLichttechnik.kicad_sym")(options "")(descr ""))
 )
