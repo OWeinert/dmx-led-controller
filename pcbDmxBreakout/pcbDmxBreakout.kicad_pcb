@@ -2223,6 +2223,11 @@
       (net 16 "/Iso_D+") (pintype "passive") (tstamp 8e697b96-cf4c-43ef-b321-8c2422b088bf))
     (pad "G" thru_hole circle locked (at -8.255 6.985 270) (size 1.8 1.8) (drill 1.2) (layers *.Cu *.Mask)
       (net 4 "/GND_iso") (pintype "passive") (tstamp 59f60168-cced-43c9-aaa5-41a1a8a2f631))
+    (model "${KIPRJMOD}/lib/nc3fah2.stp"
+      (offset (xyz 0 -5.5 12.5))
+      (scale (xyz 1 1 1))
+      (rotate (xyz -90 0 180))
+    )
   )
 
   (footprint "Capacitor_SMD:C_0805_2012Metric" (layer "F.Cu")
@@ -2717,6 +2722,11 @@
       (net 16 "/Iso_D+") (pintype "passive") (tstamp 0e32af77-726b-4e11-9f99-2e2484ba9e9b))
     (pad "G" thru_hole circle locked (at 0 -12.7 90) (size 1.8 1.8) (drill 1.2) (layers *.Cu *.Mask)
       (net 4 "/GND_iso") (pintype "passive") (tstamp 152cd84e-bbed-4df5-a866-d1ab977b0966))
+    (model "${KIPRJMOD}/lib/3-D NC3MAH.stp"
+      (offset (xyz 0 0 12.5))
+      (scale (xyz 1 1 1))
+      (rotate (xyz -90 0 180))
+    )
   )
 
   (footprint "local:LogoTuBerlin" (layer "B.Cu")
