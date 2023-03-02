@@ -2,26 +2,49 @@
 
 
 \chapter{Einleitung: Zielstellung, Aufbau der Arbeit (1 Seite)}
-\label{ChapterX} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterX}
 
-\lhead{Chapter X. \emph{Chapter Title Here}} % Change X to a consecutive number; this is for the header on each page - perhaps a shortened title
 
-\chapter{Protokolle Lichttechnik: (8 Seiten)}
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+Introduction layout:
 
-\section{Dali}
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
-\section{DMX}
-\section{MIDI}
-\section{Zigbee, Philips Hue}
+- DMX etabliertes Protokoll mit vielen Lösungen.
+Funktionieren aber auf der Anwendungsebene.
+
+- Genaue Funktionsweise wird nicht erklärt, Nur übertragende Informationen angezeigt
+
+-
+
+
+\label{Chapter2} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterX}
+
+\lhead{Kapitel 2: \emph{Protokolle Lichttechnik}}
+
+\input{Chapters/TheorieLichttechnikProtokolle}
+
 
 \chapter{Technischer Hintergrund (5 Seiten)}
 \section{DMX}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Pictures/DmxTimingFrame}
+	\caption{Zeitdiagramm \cite[p.17]{DMX512-Protocol-Standard}}
+	\label{fig:DmxTimingFrame}
+\end{figure}
+
+DMX Platine: Vorbild
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\linewidth]{Pictures/DmxIsolation}
+	\caption{Zeitdiagramm \cite[p.22]{DMX512-Protocol-Standard}}
+	\label{fig:DmxIsolation}
+\end{figure}
+
+
 \section{LED Matrix}
 \section{SPI}
 \section{OLA}
 \section{UART}
-\section{ARTnet}
 
 \chapter{Implementierung (15 Seiten)}
 \section{RPI Setup}
