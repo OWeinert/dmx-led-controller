@@ -5,28 +5,31 @@ edition = "2021"
 authors = ["Conrad Klaus"]
 license = "GPL-3.0"
 default-run = "main"
+links = "glib-2.0, libsigrok, libsigrokdecode"
 
 [dependencies]
-rpi-led-matrix = { version = "0.4.0", optional = true}
-embedded-graphics-simulator = { version = "0.4.0", optional = true}
+#rpi-led-matrix = { version = "0.4.0", optional = true}
+embedded-graphics-simulator = "0.4.0"
 cascade = "1.0.0"
 embedded-graphics = "0.7.1"
 nalgebra = "0.32.2"
 wavefront_obj = "10.0.0"
 
 [features]
-default = ["rpi-led-matrix"]
+#default = ["rpi-led-matrix"]
 
 [build-dependencies]
 cmake = "0.1.31"
+pkg-config = "0.3.26"
+bindgen = "0.64.0"
 
-[[bin]]
-name = "main"
-path = "src/main.rs"
-required-features = ["rpi-led-matrix"]
+#[[bin]]
+#name = "main"
+#path = "src/main.rs"
+#required-features = ["rpi-led-matrix"]
 
 # cargo run with --no-default-features flag
 [[bin]]
-name = "simulate-display"
+name = "main"
 path = "src/simulated_display.rs"
-required-features = ["embedded-graphics-simulator"]
+#required-features = ["embedded-graphics-simulator"]

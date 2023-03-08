@@ -1,28 +1,18 @@
+#![allow(non_upper_case_globals)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+include!(concat!(env!("OUT_DIR"), "/bindings.rs"));   // TODO use this instead
+
 mod render_engine;
 
-use cascade::cascade;
-use embedded_graphics::{
-    pixelcolor::Rgb888,
-    prelude::*
-};
-use embedded_graphics_simulator::{
-    OutputSettingsBuilder,
-    SimulatorDisplay,
-    SimulatorEvent,
-    Window,
-    sdl2::Keycode};
-use render_engine::{Engine, Parameter};
-use std::time::{Instant};
-
-#[link(name="saleaeLogic", kind="static")]
-extern {
-    fn testcall(v: f32);
-}
+use std::ffi::CString;
+use std::os::raw::{c_char, c_int};
 
 fn main() {
-    println!("Hello, world from Rust!");
+    let args = ["","--driver", "fx2lafw", "--show"].map(|arg| CString::new(arg).unwrap() );
+    let c_args = args.iter().map(|arg| arg.as_ptr()).collect::<Vec<*const c_char>>();
 
     unsafe {
-        testcall(std::f64::consts::PI as f32);
+        mainC(c_args.len() as c_int, c_args.as_ptr() as *mut *mut i8);
     };
 }
