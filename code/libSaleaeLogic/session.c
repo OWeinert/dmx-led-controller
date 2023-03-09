@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <string.h>
@@ -27,9 +26,7 @@
 static uint64_t limit_samples = 0;
 static uint64_t limit_frames = 0;
 
-#ifdef HAVE_SRD
 extern struct srd_session *srd_sess;
-#endif
 
 static int set_limit_time(const struct sr_dev_inst *sdi)
 {
@@ -320,7 +317,6 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 
 		rcvd_samples_logic = rcvd_samples_analog = 0;
 
-#ifdef HAVE_SRD
 		if (opt_pds) {
 			if (samplerate) {
 				if (srd_session_metadata_set(srd_sess, SRD_CONF_SAMPLERATE,
@@ -335,7 +331,6 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 				break;
 			}
 		}
-#endif
 		break;
 
 	case SR_DF_META:
@@ -351,7 +346,6 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 					props->samplerate = samplerate;
 					break;
 				}
-#ifdef HAVE_SRD
 				if (opt_pds) {
 					if (srd_session_metadata_set(srd_sess, SRD_CONF_SAMPLERATE,
 							g_variant_new_uint64(samplerate)) != SRD_OK) {
@@ -359,7 +353,6 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 					}
 					pd_samplerate = samplerate;
 				}
-#endif
 				break;
 			case SR_CONF_SAMPLE_INTERVAL:
 				samplerate = g_variant_get_uint64(src->data);
@@ -413,11 +406,9 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 		input_len = (end_sample - rcvd_samples_logic) * logic->unitsize;
 
 		if (opt_pds) {
-#ifdef HAVE_SRD
 			if (srd_session_send(srd_sess, rcvd_samples_logic, end_sample,
 					logic->data, input_len, logic->unitsize) != SRD_OK)
 				sr_session_stop(session);
-#endif
 		}
 
 		rcvd_samples_logic = end_sample;

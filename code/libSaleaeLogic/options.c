@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
 #include <glib.h>
 #include "sigrok-cli.h"
 
@@ -36,14 +35,12 @@ gchar *opt_channels = NULL;
 gchar *opt_channel_group = NULL;
 gchar *opt_triggers = NULL;
 gchar **opt_pds = NULL;
-#ifdef HAVE_SRD
 gchar *opt_pd_annotations = NULL;
 gchar *opt_pd_meta = NULL;
 gchar *opt_pd_binary = NULL;
 gboolean opt_pd_ann_class = FALSE;
 gboolean opt_pd_samplenum = FALSE;
 gboolean opt_pd_jsontrace = FALSE;
-#endif
 gchar *opt_input_format = NULL;
 gchar *opt_output_format = NULL;
 gchar *opt_transform_module = NULL;
@@ -86,11 +83,9 @@ CHECK_ONCE(opt_transform_module)
 CHECK_ONCE(opt_channels)
 CHECK_ONCE(opt_channel_group)
 CHECK_ONCE(opt_triggers)
-#ifdef HAVE_SRD
 CHECK_ONCE(opt_pd_annotations)
 CHECK_ONCE(opt_pd_meta)
 CHECK_ONCE(opt_pd_binary)
-#endif
 CHECK_ONCE(opt_time)
 CHECK_ONCE(opt_samples)
 CHECK_ONCE(opt_frames)
@@ -131,7 +126,6 @@ static const GOptionEntry optargs[] = {
 			"Trigger configuration", NULL},
 	{"wait-trigger", 'w', 0, G_OPTION_ARG_NONE, &opt_wait_trigger,
 			"Wait for trigger", NULL},
-#ifdef HAVE_SRD
 	{"protocol-decoders", 'P', 0, G_OPTION_ARG_STRING_ARRAY, &opt_pds,
 			"Protocol decoders to run", NULL},
 	{"protocol-decoder-annotations", 'A', 0, G_OPTION_ARG_CALLBACK, &check_opt_pd_annotations,
@@ -146,7 +140,6 @@ static const GOptionEntry optargs[] = {
 			"Show sample numbers in decoder output", NULL},
 	{"protocol-decoder-jsontrace", 0, 0, G_OPTION_ARG_NONE, &opt_pd_jsontrace,
 			"Output in Google Trace Event format (JSON)", NULL},
-#endif
 	{"scan", 0, 0, G_OPTION_ARG_NONE, &opt_scan_devs,
 			"Scan for devices", NULL},
 	{"dont-scan", 'D', 0, G_OPTION_ARG_NONE, &opt_dont_scan,
@@ -235,11 +228,8 @@ void show_help(void)
 
 	g_option_context_free(context);
 
-#ifdef HAVE_SRD
 #define SHOW_DECODER_TEXT "| -P <decoder> "
-#else
-#define SHOW_DECODER_TEXT ""
-#endif
+
 	printf("Example use, typical options:\n");
 	printf("  -d <driver> --scan\n");
 	printf("  -d <driver> { --samples N | --frames N | --time T | --continuous }\n");

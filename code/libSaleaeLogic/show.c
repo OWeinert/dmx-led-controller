@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
 #include <glib.h>
 #include <string.h>
 #include "sigrok-cli.h"
@@ -51,14 +50,12 @@ static gint sort_drivers(gconstpointer a, gconstpointer b)
 	return strcmp(sdda->name, sddb->name);
 }
 
-#ifdef HAVE_SRD
 static gint sort_pds(gconstpointer a, gconstpointer b)
 {
 	const struct srd_decoder *sda = a, *sdb = b;
 
 	return strcmp(sda->id, sdb->id);
 }
-#endif
 
 void show_version(void)
 {
@@ -67,7 +64,7 @@ void show_version(void)
 	char *str;
 	const char *lib, *version;
 
-	printf("sigrok-cli %s\n\n", SC_PACKAGE_VERSION_STRING);
+	printf("sigrok-cli %s\n\n", "0.8.0-git-527dd72");
 
 	printf("Libraries and features:\n");
 
@@ -98,7 +95,6 @@ void show_version(void)
 	printf("  - SCPI backends: %s.\n", str);
 	g_free(str);
 
-#ifdef HAVE_SRD
 	printf("- libsigrokdecode %s/%s (rt: %s/%s).\n",
 		SRD_PACKAGE_VERSION_STRING, SRD_LIB_VERSION_STRING,
 		srd_package_version_string_get(), srd_lib_version_string_get());
@@ -121,7 +117,6 @@ void show_version(void)
 	str = srd_buildinfo_host_get();
 	printf("  - Host: %s.\n", str);
 	g_free(str);
-#endif
 }
 
 void show_supported(void)
@@ -133,9 +128,7 @@ void show_supported(void)
 	const GSList *l;
 	GSList *sl;
 	int i;
-#ifdef HAVE_SRD
 	struct srd_decoder *dec;
-#endif
 
 	printf("Supported hardware drivers:\n");
 	drivers = sr_driver_list(sr_ctx);
@@ -188,7 +181,6 @@ void show_supported(void)
 	printf("\n");
 	g_slist_free(sl);
 
-#ifdef HAVE_SRD
 	if (srd_init(NULL) == SRD_OK) {
 		printf("Supported protocol decoders:\n");
 		srd_decoder_load_all();
@@ -205,14 +197,10 @@ void show_supported(void)
 		srd_exit();
 	}
 	printf("\n");
-#endif
 }
 
 void show_supported_wiki(void)
 {
-#ifndef HAVE_SRD
-	printf("Error, libsigrokdecode support not compiled in.");
-#else
 	const GSList *l;
 	GSList *sl;
 	struct srd_decoder *dec;
@@ -283,7 +271,6 @@ void show_supported_wiki(void)
 	srd_exit();
 
 	printf("\n|}\n");
-#endif
 }
 
 static gint sort_channels(gconstpointer a, gconstpointer b)
@@ -856,7 +843,6 @@ void show_dev_detail(void)
 
 }
 
-#ifdef HAVE_SRD
 static void show_pd_detail_single(const char *pd)
 {
 	struct srd_decoder *dec;
@@ -995,7 +981,6 @@ void show_pd_detail(void)
 	for (int i = 0; opt_pds[i]; i++)
 		show_pd_detail_single(opt_pds[i]);
 }
-#endif
 
 void show_input(void)
 {

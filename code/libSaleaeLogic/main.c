@@ -17,15 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
 #include <stdlib.h>
 #include <glib.h>
 #include "sigrok-cli.h"
 
 struct sr_context *sr_ctx = NULL;
-#ifdef HAVE_SRD
 struct srd_session *srd_sess = NULL;
-#endif
 
 static void logger(const gchar *log_domain, GLogLevelFlags log_level,
 		   const gchar *message, gpointer cb_data)
@@ -68,9 +65,7 @@ int select_channels(struct sr_dev_inst *sdi)
 		}
 		g_slist_free(selected_channels);
 	}
-#ifdef HAVE_SRD
 	map_pd_channels(sdi);
-#endif
 	return SR_OK;
 }
 
@@ -228,15 +223,32 @@ static void set_options(void)
 	sr_dev_close(sdi);
 }
 
-//  TODO , src folder could still be a better place..., maybe I dont need build, include this folder anymore either..
-
 int mainC(int argc, char **argv)
 {
 	g_log_set_default_handler(logger, NULL);
 
-	if (parse_options(argc, argv)) {
-		return 1;
-	}
+	//if (parse_options(argc, argv)) {
+	//	return 1;
+	//}
+
+    /*
+     * sigrok-cli
+     *  -d fx2lafw
+     *  --samples 700
+     *  -P dmx512:dmx=D0
+     *  --config "samplerate=1 MHz"
+     *  --protocol-decoder-jsontrace
+     */
+
+    gchar driver[] = "fx2lafw";
+    opt_drv = driver;
+    gchar samples[] = "700";
+    opt_samples = samples;
+    gchar *protocol[20] = {"dmx512:dmx=D0"};
+    opt_pds = protocol;
+    gchar *config[20] = {"samplerate=1 MHz"};
+    opt_configs = config;
+    opt_pd_jsontrace = TRUE;
 
 	/* Set the loglevel (amount of messages to output) for libsigrok. */
 	if (sr_log_loglevel_set(opt_loglevel) != SR_OK)
@@ -245,9 +257,6 @@ int mainC(int argc, char **argv)
 	if (sr_init(&sr_ctx) != SR_OK)
 		goto done;
 
-    show_dev_list();
-
-#ifdef HAVE_SRD
 	if (opt_pd_binary && !opt_pds) {
 		g_critical("Option -B will not take effect in the absence of -P.");
 		goto done;
@@ -292,7 +301,6 @@ int mainC(int argc, char **argv)
 		}
 		show_pd_prepare();
 	}
-#endif
 
 	if (opt_version)
 		show_version();
@@ -310,10 +318,8 @@ int mainC(int argc, char **argv)
 		show_transform();
 	else if (opt_scan_devs)
 		show_dev_list();
-#ifdef HAVE_SRD
 	else if (opt_pds && opt_show)
 		show_pd_detail();
-#endif
 	else if (opt_show)
 		show_dev_detail();
 	else if (opt_input_file)
@@ -328,13 +334,10 @@ int mainC(int argc, char **argv)
 		show_serial_ports();
 	else
 		show_help();
-
-#ifdef HAVE_SRD
 	if (opt_pds)
 		show_pd_close();
 	if (opt_pds)
 		srd_exit();
-#endif
 
 done:
 	if (sr_ctx)

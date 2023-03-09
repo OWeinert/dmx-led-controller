@@ -20,10 +20,7 @@
 #ifndef SIGROK_CLI_SIGROK_CLI_H
 #define SIGROK_CLI_SIGROK_CLI_H
 
-#ifdef HAVE_SRD
-/* First, so we avoid a _POSIX_C_SOURCE warning. */
 #include <libsigrokdecode/libsigrokdecode.h>
-#endif
 #include <libsigrok/libsigrok.h>
 
 #define DEFAULT_OUTPUT_FORMAT_FILE "srzip"
@@ -89,7 +86,6 @@ void load_input_file(gboolean do_props);
 int setup_binary_stdout(void);
 
 /* decode.c */
-#ifdef HAVE_SRD
 extern uint64_t pd_samplerate;
 int register_pds(gchar **all_pds, char *opt_pd_annotations);
 int setup_pd_annotations(char *opt_pd_annotations);
@@ -101,7 +97,6 @@ void show_pd_binary(struct srd_proto_data *pdata, void *cb_data);
 void show_pd_prepare(void);
 void show_pd_close(void);
 void map_pd_channels(struct sr_dev_inst *sdi);
-#endif
 
 /* parsers.c */
 struct sr_channel *find_channel(GSList *channellist, const char *channelname);
@@ -137,14 +132,12 @@ extern gchar *opt_channels;
 extern gchar *opt_channel_group;
 extern gchar *opt_triggers;
 extern gchar **opt_pds;
-#ifdef HAVE_SRD
 extern gchar *opt_pd_annotations;
 extern gchar *opt_pd_meta;
 extern gchar *opt_pd_binary;
 extern gboolean opt_pd_ann_class;
 extern gboolean opt_pd_samplenum;
 extern gboolean opt_pd_jsontrace;
-#endif
 extern gchar *opt_input_format;
 extern gchar *opt_output_format;
 extern gchar *opt_transform_module;

@@ -17,13 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
 #include "sigrok-cli.h"
 
-#ifdef HAVE_SRD
 static GHashTable *pd_ann_visible = NULL;
 static GHashTable *pd_meta_visible = NULL;
 static GHashTable *pd_binary_visible = NULL;
@@ -762,4 +760,4 @@ void show_pd_close(void)
 	if (opt_pd_jsontrace)
 		jsontrace_open_close(TRUE, FALSE, FALSE);
 }
-#endif
+
