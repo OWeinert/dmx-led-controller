@@ -27,7 +27,11 @@
 #define DEFAULT_OUTPUT_FORMAT_NOFILE "bits:width=64"
 
 /* main.c */
-int mainC(int argc, char **argv);
+extern gint opt_loglevel;
+extern gchar *opt_output_file;
+extern gchar *opt_drv;
+extern gchar *opt_output_format;
+int mainC();
 extern struct sr_context *sr_ctx;
 int select_channels(struct sr_dev_inst *sdi);
 int maybe_config_get(struct sr_dev_driver *driver,
@@ -40,22 +44,9 @@ int maybe_config_list(struct sr_dev_driver *driver,
 		const struct sr_dev_inst *sdi, struct sr_channel_group *cg,
 		uint32_t key, GVariant **gvar);
 
-/* show.c */
-void show_version(void);
-void show_supported(void);
-void show_supported_wiki(void);
-void show_dev_list(void);
-void show_dev_detail(void);
-void show_pd_detail(void);
-void show_input(void);
-void show_output(void);
-void show_transform(void);
-void show_serial_ports(void);
 
 /* device.c */
 GSList *device_scan(void);
-struct sr_channel_group *lookup_channel_group(struct sr_dev_inst *sdi,
-	const char *cg_name);
 
 /* session.c */
 struct df_arg_desc {
@@ -74,82 +65,26 @@ struct df_arg_desc {
 };
 void datafeed_in(const struct sr_dev_inst *sdi,
 		const struct sr_datafeed_packet *packet, void *cb_data);
-int opt_to_gvar(char *key, char *value, struct sr_config *src);
-int set_dev_options_array(struct sr_dev_inst *sdi, char **opts);
-int set_dev_options(struct sr_dev_inst *sdi, GHashTable *args);
+int opt_to_gvar(struct sr_config *src);
 void run_session(void);
-
-/* input.c */
-void load_input_file(gboolean do_props);
 
 /* output.c */
 int setup_binary_stdout(void);
 
 /* decode.c */
 extern uint64_t pd_samplerate;
-int register_pds(gchar **all_pds, char *opt_pd_annotations);
-int setup_pd_annotations(char *opt_pd_annotations);
-int setup_pd_meta(char *opt_pd_meta);
-int setup_pd_binary(char *opt_pd_binary);
+int register_pd();
 void show_pd_annotations(struct srd_proto_data *pdata, void *cb_data);
-void show_pd_meta(struct srd_proto_data *pdata, void *cb_data);
-void show_pd_binary(struct srd_proto_data *pdata, void *cb_data);
-void show_pd_prepare(void);
-void show_pd_close(void);
 void map_pd_channels(struct sr_dev_inst *sdi);
 
 /* parsers.c */
 struct sr_channel *find_channel(GSList *channellist, const char *channelname);
-GSList *parse_channelstring(struct sr_dev_inst *sdi, const char *channelstring);
-int parse_triggerstring(const struct sr_dev_inst *sdi, const char *s,
-		struct sr_trigger **trigger);
 GHashTable *parse_generic_arg(const char *arg,
 		gboolean sep_first, const char *key_first);
 GHashTable *generic_arg_to_opt(const struct sr_option **opts, GHashTable *genargs);
 GSList *check_unknown_keys(const struct sr_option **avail, GHashTable *used);
 gboolean warn_unknown_keys(const struct sr_option **avail, GHashTable *used,
 		const char *caption);
-int canon_cmp(const char *str1, const char *str2);
-int parse_driver(char *arg, struct sr_dev_driver **driver, GSList **drvopts);
-
-/* anykey.c */
-void add_anykey(struct sr_session *session);
-void clear_anykey(void);
-
-/* options.c */
-extern gboolean opt_version;
-extern gboolean opt_list_supported;
-extern gboolean opt_list_supported_wiki;
-extern gint opt_loglevel;
-extern gboolean opt_scan_devs;
-extern gboolean opt_dont_scan;
-extern gboolean opt_wait_trigger;
-extern gchar *opt_input_file;
-extern gchar *opt_output_file;
-extern gchar *opt_drv;
-extern gchar **opt_configs;
-extern gchar *opt_channels;
-extern gchar *opt_channel_group;
-extern gchar *opt_triggers;
-extern gchar **opt_pds;
-extern gchar *opt_pd_annotations;
-extern gchar *opt_pd_meta;
-extern gchar *opt_pd_binary;
-extern gboolean opt_pd_ann_class;
-extern gboolean opt_pd_samplenum;
-extern gboolean opt_pd_jsontrace;
-extern gchar *opt_input_format;
-extern gchar *opt_output_format;
-extern gchar *opt_transform_module;
-extern gboolean opt_show;
-extern gchar *opt_time;
-extern gchar *opt_samples;
-extern gchar *opt_frames;
-extern gboolean opt_continuous;
-extern gchar **opt_gets;
-extern gboolean opt_set;
-extern gboolean opt_list_serial;
-int parse_options(int argc, char **argv);
-void show_help(void);
+int get_driver(struct sr_dev_driver **driver, GSList **drvopts);
 
 #endif

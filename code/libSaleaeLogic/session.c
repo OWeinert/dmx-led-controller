@@ -23,55 +23,9 @@
 #include <stdlib.h>
 #include "sigrok-cli.h"
 
-static uint64_t limit_samples = 0;
-static uint64_t limit_frames = 0;
+static uint64_t limit_samples = 700;
 
 extern struct srd_session *srd_sess;
-
-static int set_limit_time(const struct sr_dev_inst *sdi)
-{
-	GVariant *gvar;
-	uint64_t time_msec;
-	uint64_t samplerate;
-	struct sr_dev_driver *driver;
-
-	driver = sr_dev_inst_driver_get(sdi);
-
-	if (!(time_msec = sr_parse_timestring(opt_time))) {
-		g_critical("Invalid time '%s'", opt_time);
-		return SR_ERR;
-	}
-
-	if (sr_dev_config_capabilities_list(sdi, NULL, SR_CONF_LIMIT_MSEC)
-			& SR_CONF_SET) {
-		gvar = g_variant_new_uint64(time_msec);
-		if (sr_config_set(sdi, NULL, SR_CONF_LIMIT_MSEC, gvar) != SR_OK) {
-			g_critical("Failed to configure time limit.");
-			return SR_ERR;
-		}
-	} else if (sr_dev_config_capabilities_list(sdi, NULL, SR_CONF_SAMPLERATE)
-			& (SR_CONF_GET | SR_CONF_SET)) {
-		/* Convert to samples based on the samplerate. */
-		sr_config_get(driver, sdi, NULL, SR_CONF_SAMPLERATE, &gvar);
-		samplerate = g_variant_get_uint64(gvar);
-		g_variant_unref(gvar);
-		limit_samples = (samplerate) * time_msec / (uint64_t)1000;
-		if (limit_samples == 0) {
-			g_critical("Not enough time at this samplerate.");
-			return SR_ERR;
-		}
-		gvar = g_variant_new_uint64(limit_samples);
-		if (sr_config_set(sdi, NULL, SR_CONF_LIMIT_SAMPLES, gvar) != SR_OK) {
-			g_critical("Failed to configure time-based sample limit.");
-			return SR_ERR;
-		}
-	} else {
-		g_critical("This device does not support time limits.");
-		return SR_ERR;
-	}
-
-	return SR_OK;
-}
 
 const struct sr_output *setup_output_format(const struct sr_dev_inst *sdi, FILE **outfile)
 {
@@ -127,35 +81,6 @@ const struct sr_output *setup_output_format(const struct sr_dev_inst *sdi, FILE 
 	return o;
 }
 
-const struct sr_transform *setup_transform_module(const struct sr_dev_inst *sdi)
-{
-	const struct sr_transform_module *tmod;
-	const struct sr_option **options;
-	const struct sr_transform *t;
-	GHashTable *fmtargs, *fmtopts;
-	char *fmtspec;
-
-	fmtargs = parse_generic_arg(opt_transform_module, TRUE, NULL);
-	fmtspec = g_hash_table_lookup(fmtargs, "sigrok_key");
-	if (!fmtspec)
-		g_critical("Invalid transform module.");
-	if (!(tmod = sr_transform_find(fmtspec)))
-		g_critical("Unknown transform module '%s'.", fmtspec);
-	g_hash_table_remove(fmtargs, "sigrok_key");
-	if ((options = sr_transform_options_get(tmod))) {
-		fmtopts = generic_arg_to_opt(options, fmtargs);
-		(void)warn_unknown_keys(options, fmtargs, NULL);
-		sr_transform_options_free(options);
-	} else {
-		fmtopts = NULL;
-	}
-	t = sr_transform_new(tmod, fmtopts, sdi);
-	if (fmtopts)
-		g_hash_table_destroy(fmtopts);
-	g_hash_table_destroy(fmtargs);
-
-	return t;
-}
 
 /* Get the input stream's list of channels and their types, once. */
 static void props_get_channels(struct df_arg_desc *args,
@@ -183,19 +108,6 @@ static void props_get_channels(struct df_arg_desc *args,
 		props->first_analog_channel = ch;
 		break;
 	}
-}
-
-static gboolean props_chk_1st_channel(struct df_arg_desc *args,
-	const struct sr_datafeed_analog *analog)
-{
-	struct sr_channel *ch;
-
-	if (!args || !analog || !analog->meaning)
-		return FALSE;
-	ch = g_slist_nth_data(analog->meaning->channels, 0);
-	if (!ch)
-		return FALSE;
-	return ch == args->props.first_analog_channel;
 }
 
 static void props_dump_details(struct df_arg_desc *args)
@@ -255,7 +167,6 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 	static uint64_t rcvd_samples_logic = 0;
 	static uint64_t rcvd_samples_analog = 0;
 	static uint64_t samplerate = 0;
-	static int triggered = 0;
 	static FILE *outfile = NULL;
 
 	const struct sr_datafeed_meta *meta;
@@ -267,15 +178,10 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 	struct sr_session *session;
 	struct sr_config *src;
 	GSList *l;
-	GString *out;
 	GVariant *gvar;
 	uint64_t end_sample;
 	uint64_t input_len;
 	struct sr_dev_driver *driver;
-
-	/* Avoid warnings when building without decoder support. */
-	(void)session;
-	(void)input_len;
 
 	driver = sr_dev_inst_driver_get(sdi);
 
@@ -317,20 +223,19 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 
 		rcvd_samples_logic = rcvd_samples_analog = 0;
 
-		if (opt_pds) {
-			if (samplerate) {
-				if (srd_session_metadata_set(srd_sess, SRD_CONF_SAMPLERATE,
-						g_variant_new_uint64(samplerate)) != SRD_OK) {
-					g_critical("Failed to configure decode session.");
-					break;
-				}
-				pd_samplerate = samplerate;
-			}
-			if (srd_session_start(srd_sess) != SRD_OK) {
-				g_critical("Failed to start decode session.");
-				break;
-			}
-		}
+        if (samplerate) {
+            if (srd_session_metadata_set(srd_sess, SRD_CONF_SAMPLERATE,
+                    g_variant_new_uint64(samplerate)) != SRD_OK) {
+                g_critical("Failed to configure decode session.");
+                break;
+            }
+            pd_samplerate = samplerate;
+        }
+        if (srd_session_start(srd_sess) != SRD_OK) {
+            g_critical("Failed to start decode session.");
+            break;
+        }
+
 		break;
 
 	case SR_DF_META:
@@ -346,13 +251,13 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 					props->samplerate = samplerate;
 					break;
 				}
-				if (opt_pds) {
-					if (srd_session_metadata_set(srd_sess, SRD_CONF_SAMPLERATE,
-							g_variant_new_uint64(samplerate)) != SRD_OK) {
-						g_critical("Failed to pass samplerate to decoder.");
-					}
-					pd_samplerate = samplerate;
-				}
+
+                if (srd_session_metadata_set(srd_sess, SRD_CONF_SAMPLERATE,
+                        g_variant_new_uint64(samplerate)) != SRD_OK) {
+                    g_critical("Failed to pass samplerate to decoder.");
+                }
+                pd_samplerate = samplerate;
+
 				break;
 			case SR_CONF_SAMPLE_INTERVAL:
 				samplerate = g_variant_get_uint64(src->data);
@@ -371,11 +276,6 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 
 	case SR_DF_TRIGGER:
 		g_debug("cli: Received SR_DF_TRIGGER.");
-		if (do_props) {
-			props->triggered++;
-			break;
-		}
-		triggered = 1;
 		break;
 
 	case SR_DF_LOGIC:
@@ -392,9 +292,6 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 			break;
 		}
 
-		/* Don't store any samples until triggered. */
-		if (opt_wait_trigger && !triggered)
-			break;
 
 		if (limit_samples && rcvd_samples_logic >= limit_samples)
 			break;
@@ -405,11 +302,10 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 			end_sample = limit_samples;
 		input_len = (end_sample - rcvd_samples_logic) * logic->unitsize;
 
-		if (opt_pds) {
-			if (srd_session_send(srd_sess, rcvd_samples_logic, end_sample,
-					logic->data, input_len, logic->unitsize) != SRD_OK)
-				sr_session_stop(session);
-		}
+
+        if (srd_session_send(srd_sess, rcvd_samples_logic, end_sample,
+                logic->data, input_len, logic->unitsize) != SRD_OK)
+            sr_session_stop(session);
 
 		rcvd_samples_logic = end_sample;
 		break;
@@ -417,23 +313,7 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 	case SR_DF_ANALOG:
 		analog = packet->payload;
 		g_message("cli: Received SR_DF_ANALOG (%d samples).", analog->num_samples);
-		if (analog->num_samples == 0)
-			break;
-
-		if (do_props) {
-			/* Only count the first analog channel. */
-			props_get_channels(df_arg, sdi);
-			if (!props_chk_1st_channel(df_arg, analog))
-				break;
-			props->sample_count_analog += analog->num_samples;
-			break;
-		}
-
-		if (limit_samples && rcvd_samples_analog >= limit_samples)
-			break;
-
-		rcvd_samples_analog += analog->num_samples;
-		break;
+        break;
 
 	case SR_DF_FRAME_BEGIN:
 		g_debug("cli: Received SR_DF_FRAME_BEGIN.");
@@ -451,24 +331,6 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 		break;
 	}
 
-	if (!do_props && o && !opt_pds) {
-		if (sr_output_send(o, packet, &out) == SR_OK) {
-			if (oa && !out) {
-				/*
-				 * The user didn't specify an output module,
-				 * but needs to see this analog data.
-				 */
-				sr_output_send(oa, packet, &out);
-			}
-			if (outfile && out && out->len > 0) {
-				fwrite(out->str, 1, out->len, outfile);
-				fflush(outfile);
-			}
-			if (out)
-				g_string_free(out, TRUE);
-		}
-	}
-
 	/*
 	 * SR_DF_END needs to be handled after the output module's receive()
 	 * is called, so it can properly clean up that module.
@@ -476,9 +338,6 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 	if (packet->type == SR_DF_END) {
 		g_debug("cli: Received SR_DF_END.");
 
-#if defined HAVE_SRD_SESSION_SEND_EOF && HAVE_SRD_SESSION_SEND_EOF
-		(void)srd_session_send_eof(srd_sess);
-#endif
 
 		if (do_props) {
 			props_dump_details(df_arg);
@@ -509,198 +368,29 @@ void datafeed_in(const struct sr_dev_inst *sdi,
 
 }
 
-int opt_to_gvar(char *key, char *value, struct sr_config *src)
-{
-	const struct sr_key_info *srci, *srmqi;
-	double tmp_double, dlow, dhigh;
-	uint64_t tmp_u64, p, q, low, high, mqflags;
-	uint32_t mq;
-	GVariant *rational[2], *range[2], *gtup[2];
-	GVariantBuilder *vbl;
-	gboolean tmp_bool;
-	gchar **keyval;
-	int ret, i;
-
-	if (!(srci = sr_key_info_name_get(SR_KEY_CONFIG, key))) {
-		g_critical("Unknown device option '%s'.", (char *) key);
-		return -1;
-	}
-	src->key = srci->key;
-
-	if ((!value || strlen(value) == 0) &&
-		(srci->datatype != SR_T_BOOL)) {
-		g_critical("Option '%s' needs a value.", (char *)key);
-		return -1;
-	}
-
-	ret = 0;
-	switch (srci->datatype) {
-	case SR_T_UINT64:
-		ret = sr_parse_sizestring(value, &tmp_u64);
-		if (ret != 0)
-			break;
-		src->data = g_variant_new_uint64(tmp_u64);
-		break;
-	case SR_T_INT32:
-		ret = sr_parse_sizestring(value, &tmp_u64);
-		if (ret != 0)
-			break;
-		src->data = g_variant_new_int32(tmp_u64);
-		break;
-	case SR_T_STRING:
-		src->data = g_variant_new_string(value);
-		break;
-	case SR_T_BOOL:
-		if (!value)
-			tmp_bool = TRUE;
-		else
-			tmp_bool = sr_parse_boolstring(value);
-		src->data = g_variant_new_boolean(tmp_bool);
-		break;
-	case SR_T_FLOAT:
-		tmp_double = strtof(value, NULL);
-		src->data = g_variant_new_double(tmp_double);
-		break;
-	case SR_T_RATIONAL_PERIOD:
-		if ((ret = sr_parse_period(value, &p, &q)) != SR_OK)
-			break;
-		rational[0] = g_variant_new_uint64(p);
-		rational[1] = g_variant_new_uint64(q);
-		src->data = g_variant_new_tuple(rational, 2);
-		break;
-	case SR_T_RATIONAL_VOLT:
-		if ((ret = sr_parse_voltage(value, &p, &q)) != SR_OK)
-			break;
-		rational[0] = g_variant_new_uint64(p);
-		rational[1] = g_variant_new_uint64(q);
-		src->data = g_variant_new_tuple(rational, 2);
-		break;
-	case SR_T_UINT64_RANGE:
-		if (sscanf(value, "%"PRIu64"-%"PRIu64, &low, &high) != 2) {
-			ret = -1;
-			break;
-		} else {
-			range[0] = g_variant_new_uint64(low);
-			range[1] = g_variant_new_uint64(high);
-			src->data = g_variant_new_tuple(range, 2);
-		}
-		break;
-	case SR_T_DOUBLE_RANGE:
-		if (sscanf(value, "%lf-%lf", &dlow, &dhigh) != 2) {
-			ret = -1;
-			break;
-		} else {
-			range[0] = g_variant_new_double(dlow);
-			range[1] = g_variant_new_double(dhigh);
-			src->data = g_variant_new_tuple(range, 2);
-		}
-		break;
-	case SR_T_KEYVALUE:
-		/* Expects the argument to be in the form of key=value. */
-		keyval = g_strsplit(value, "=", 2);
-		if (!keyval[0] || !keyval[1]) {
-			g_strfreev(keyval);
-			ret = -1;
-			break;
-		} else {
-			vbl = g_variant_builder_new(G_VARIANT_TYPE_DICTIONARY);
-			g_variant_builder_add(vbl, "{ss}",
-					      keyval[0], keyval[1]);
-			src->data = g_variant_builder_end(vbl);
-			g_strfreev(keyval);
-		}
-		break;
-	case SR_T_MQ:
-		/*
-		  Argument is MQ id e.g. ("voltage") optionally followed by one
-		  or more /<mqflag> e.g. "/ac".
-		 */
-		keyval = g_strsplit(value, "/", 0);
-		if (!keyval[0] || !(srmqi = sr_key_info_name_get(SR_KEY_MQ, keyval[0]))) {
-			g_strfreev(keyval);
-			ret = -1;
-			break;
-		}
-		mq = srmqi->key;
-		mqflags = 0;
-		for (i = 1; keyval[i]; i++) {
-			if (!(srmqi = sr_key_info_name_get(SR_KEY_MQFLAGS, keyval[i]))) {
-				ret = -1;
-				break;
-			}
-			mqflags |= srmqi->key;
-		}
-		g_strfreev(keyval);
-		if (ret != -1) {
-			gtup[0] = g_variant_new_uint32(mq);
-			gtup[1] = g_variant_new_uint64(mqflags);
-			src->data = g_variant_new_tuple(gtup, 2);
-		}
-		break;
-	default:
-		g_critical("Unknown data type specified for option '%s' "
-			   "(driver implementation bug?).", key);
-		ret = -1;
-	}
-
-	if (ret < 0)
-		g_critical("Invalid value: '%s' for option '%s'", value, key);
-
-	return ret;
-}
-
-int set_dev_options_array(struct sr_dev_inst *sdi, char **opts)
-{
-	size_t opt_idx;
-	const char *opt_text;
-	GHashTable *args;
-	int ret;
-
-	for (opt_idx = 0; opts && opts[opt_idx]; opt_idx++) {
-		opt_text = opts[opt_idx];
-		args = parse_generic_arg(opt_text, FALSE, "channel_group");
-		if (!args)
-			continue;
-		ret = set_dev_options(sdi, args);
-		g_hash_table_destroy(args);
-		if (ret != SR_OK)
-			return ret;
-	}
-
-	return SR_OK;
-}
-
-int set_dev_options(struct sr_dev_inst *sdi, GHashTable *args)
+int set_dev_options(struct sr_dev_inst *sdi)
 {
 	struct sr_config src;
-	const char *cg_name;
 	struct sr_channel_group *cg;
-	GHashTableIter iter;
-	gpointer key, value;
 	int ret;
+	cg = NULL;
+    const struct sr_key_info *srci;
 
-	/*
-	 * Not finding the 'sigrok_key' key (optional user specified
-	 * channel group name) in the current options group's hash table
-	 * is perfectly fine. In that case the -g selection is used,
-	 * which defaults to "the device" (global parameters).
-	 */
-	cg_name = g_hash_table_lookup(args, "sigrok_key");
-	cg = lookup_channel_group(sdi, cg_name);
+    srci = sr_key_info_name_get(SR_KEY_CONFIG, "samplerate");
+    if (!srci) {
+        g_critical("Unknown device option '%s'.", "samplerate");
+        return -1;
+    }
 
-	g_hash_table_iter_init(&iter, args);
-	while (g_hash_table_iter_next(&iter, &key, &value)) {
-		if (g_ascii_strcasecmp(key, "sigrok_key") == 0)
-			continue;
-		if ((ret = opt_to_gvar(key, value, &src)) != 0)
-			return ret;
-		if ((ret = maybe_config_set(sr_dev_inst_driver_get(sdi), sdi, cg,
-				src.key, src.data)) != SR_OK) {
-			g_critical("Failed to set device option '%s': %s.",
-				   (char *)key, sr_strerror(ret));
-			return ret;
-		}
-	}
+    src.key = srci->key;
+    src.data = g_variant_new_uint64((uint64_t) 1e6);
+
+    if ((ret = maybe_config_set(sr_dev_inst_driver_get(sdi), sdi, cg,
+            src.key, src.data)) != SR_OK) {
+        g_critical("Failed to set device option '%s': %s.",
+                   "samplerate", sr_strerror(ret));
+        return ret;
+    }
 
 	return SR_OK;
 }
@@ -708,176 +398,105 @@ int set_dev_options(struct sr_dev_inst *sdi, GHashTable *args)
 void run_session(void)
 {
 	struct df_arg_desc df_arg;
-	GSList *devices, *real_devices, *sd;
-	GVariant *gvar;
-	struct sr_session *session;
-	struct sr_trigger *trigger;
-	struct sr_dev_inst *sdi;
-	uint64_t min_samples, max_samples;
-	GArray *drv_opts;
-	guint i;
-	int is_demo_dev;
-	struct sr_dev_driver *driver;
-	const struct sr_transform *t;
+    struct sr_dev_inst *mySaleaeLogic;
+
+    mySaleaeLogic = NULL;
 	GMainLoop *main_loop;
 
 	memset(&df_arg, 0, sizeof(df_arg));
 	df_arg.do_props = FALSE;
 
-	devices = device_scan();
+	GSList *devices = device_scan();
 	if (!devices) {
 		g_critical("No devices found.");
 		return;
 	}
 
-	real_devices = NULL;
-	for (sd = devices; sd; sd = sd->next) {
+	struct sr_dev_driver *driver;
+	for (GSList *sd = devices; sd; sd = sd->next) {
+        struct sr_dev_inst *sdi;
 		sdi = sd->data;
-
 		driver = sr_dev_inst_driver_get(sdi);
 
+        GArray *drv_opts;
 		if (!(drv_opts = sr_dev_options(driver, NULL, NULL))) {
 			g_critical("Failed to query list of driver options.");
 			return;
 		}
+		for (guint i = 0; i < drv_opts->len; i++) {
+			if (g_array_index(drv_opts, uint32_t, i) == SR_CONF_DEMO_DEV) {
+                // is demo device
+            }
 
-		is_demo_dev = 0;
-		for (i = 0; i < drv_opts->len; i++) {
-			if (g_array_index(drv_opts, uint32_t, i) == SR_CONF_DEMO_DEV)
-				is_demo_dev = 1;
 		}
-
 		g_array_free(drv_opts, TRUE);
 
-		if (!is_demo_dev)
-			real_devices = g_slist_append(real_devices, sdi);
+        if(g_str_equal(driver->name, "fx2lafw") ) {
+            mySaleaeLogic = sdi;
+            break;
+        }
 	}
+    g_slist_free(devices);
 
-	if (g_slist_length(devices) > 1) {
-		if (g_slist_length(real_devices) != 1) {
-			g_critical("sigrok-cli only supports one device for capturing.");
-			return;
-		} else {
-			/* We only have one non-demo device. */
-			g_slist_free(devices);
-			devices = real_devices;
-			real_devices = NULL;
-		}
-	}
+    if (mySaleaeLogic == NULL) {
+        g_critical("No real devices found.");
+        return;
+    }
 
-	/* This is unlikely to happen but it makes static analyzers stop complaining. */
-	if (!devices) {
-		g_critical("No real devices found.");
-		return;
-	}
 
-	sdi = devices->data;
-	g_slist_free(devices);
-	g_slist_free(real_devices);
-
+    struct sr_session *session;
 	sr_session_new(sr_ctx, &session);
 	df_arg.session = session;
 	sr_session_datafeed_callback_add(session, datafeed_in, &df_arg);
 	df_arg.session = NULL;
 
-	if (sr_dev_open(sdi) != SR_OK) {
+	if (sr_dev_open(mySaleaeLogic) != SR_OK) {
 		g_critical("Failed to open device.");
 		return;
 	}
 
-	if (sr_session_dev_add(session, sdi) != SR_OK) {
+	if (sr_session_dev_add(session, mySaleaeLogic) != SR_OK) {
 		g_critical("Failed to add device to session.");
 		sr_session_destroy(session);
 		return;
 	}
 
-	if (opt_configs) {
-		if (set_dev_options_array(sdi, opt_configs) != SR_OK)
-			return;
-	}
+    if (set_dev_options(mySaleaeLogic) != SR_OK)
+        return;
 
-	if (select_channels(sdi) != SR_OK) {
+
+	if (select_channels(mySaleaeLogic) != SR_OK) {
 		g_critical("Failed to set channels.");
 		sr_session_destroy(session);
 		return;
 	}
 
-	trigger = NULL;
-	if (opt_triggers) {
-		if (!parse_triggerstring(sdi, opt_triggers, &trigger)) {
-			sr_session_destroy(session);
-			return;
-		}
-		if (sr_session_trigger_set(session, trigger) != SR_OK) {
-			sr_session_destroy(session);
-			return;
-		}
-	}
+    GVariant *gvar;
+    if (maybe_config_list(driver, mySaleaeLogic, NULL, SR_CONF_LIMIT_SAMPLES,
+            &gvar) == SR_OK) {
+        /*
+         * The device has no compression, or compression is turned
+         * off, and publishes its sample memory size.
+         */
 
-	if (opt_continuous) {
-		if (!sr_dev_has_option(sdi, SR_CONF_CONTINUOUS)) {
-			g_critical("This device does not support continuous sampling.");
-			sr_session_destroy(session);
-			return;
-		}
-	}
-
-	if (opt_time) {
-		if (set_limit_time(sdi) != SR_OK) {
-			sr_session_destroy(session);
-			return;
-		}
-	}
-
-	if (opt_samples) {
-		if ((sr_parse_sizestring(opt_samples, &limit_samples) != SR_OK)) {
-			g_critical("Invalid sample limit '%s'.", opt_samples);
-			sr_session_destroy(session);
-			return;
-		}
-		if (maybe_config_list(driver, sdi, NULL, SR_CONF_LIMIT_SAMPLES,
-				&gvar) == SR_OK) {
-			/*
-			 * The device has no compression, or compression is turned
-			 * off, and publishes its sample memory size.
-			 */
-			g_variant_get(gvar, "(tt)", &min_samples, &max_samples);
-			g_variant_unref(gvar);
-			if (limit_samples < min_samples) {
-				g_critical("The device stores at least %"PRIu64
-						" samples with the current settings.", min_samples);
-			}
-			if (limit_samples > max_samples) {
-				g_critical("The device can store only %"PRIu64
-						" samples with the current settings.", max_samples);
-			}
-		}
-		gvar = g_variant_new_uint64(limit_samples);
-		if (maybe_config_set(sr_dev_inst_driver_get(sdi), sdi, NULL, SR_CONF_LIMIT_SAMPLES, gvar) != SR_OK) {
-			g_critical("Failed to configure sample limit.");
-			sr_session_destroy(session);
-			return;
-		}
-	}
-
-	if (opt_frames) {
-		if ((sr_parse_sizestring(opt_frames, &limit_frames) != SR_OK)) {
-			g_critical("Invalid frame limit '%s'.", opt_frames);
-			sr_session_destroy(session);
-			return;
-		}
-		gvar = g_variant_new_uint64(limit_frames);
-		if (maybe_config_set(sr_dev_inst_driver_get(sdi), sdi, NULL, SR_CONF_LIMIT_FRAMES, gvar) != SR_OK) {
-			g_critical("Failed to configure frame limit.");
-			sr_session_destroy(session);
-			return;
-		}
-	}
-
-	if (opt_transform_module) {
-		if (!(t = setup_transform_module(sdi)))
-			g_critical("Failed to initialize transform module.");
-	}
+        uint64_t min_samples, max_samples;
+        g_variant_get(gvar, "(tt)", &min_samples, &max_samples);
+        g_variant_unref(gvar);
+        if (limit_samples < min_samples) {
+            g_critical("The device stores at least %"PRIu64
+                    " samples with the current settings.", min_samples);
+        }
+        if (limit_samples > max_samples) {
+            g_critical("The device can store only %"PRIu64
+                    " samples with the current settings.", max_samples);
+        }
+    }
+    gvar = g_variant_new_uint64(limit_samples);
+    if (maybe_config_set(sr_dev_inst_driver_get(mySaleaeLogic), mySaleaeLogic, NULL, SR_CONF_LIMIT_SAMPLES, gvar) != SR_OK) {
+        g_critical("Failed to configure sample limit.");
+        sr_session_destroy(session);
+        return;
+    }
 
 	main_loop = g_main_loop_new(NULL, FALSE);
 
@@ -890,17 +509,7 @@ void run_session(void)
 		sr_session_destroy(session);
 		return;
 	}
-
-	if (opt_continuous)
-		add_anykey(session);
-
 	g_main_loop_run(main_loop);
-
-	if (opt_continuous)
-		clear_anykey();
-
-	if (trigger)
-		sr_trigger_free(trigger);
 
 	sr_session_datafeed_callback_remove_all(session);
 	g_main_loop_unref(main_loop);
