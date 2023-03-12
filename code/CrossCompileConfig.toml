@@ -4,11 +4,20 @@
 
 [target.aarch64-unknown-linux-gnu]
 linker = "/Users/ckl/development/aarch64-unknown-linux-gnu/bin/aarch64-unknown-linux-gnu-g++"
+rustflags = ["-L", "/Users/ckl/development/libs-arch64-unknown-linux/sigrok/lib/", "-L", "/Users/ckl/development/libs-arch64-unknown-linux/glib/lib/aarch64-linux-gnu", "-L", "/Users/ckl/development/libs-arch64-unknown-linux/gettext/lib"]
+#rustflags = ["-L", "/Users/ckl/development/libs-arch64-unknown-linux/del_3/lib/aarch64-linux-gnu", "-L", "/Users/ckl/development/libs-arch64-unknown-linux/del_3/usr/lib/aarch64-linux-gnu", "-L", "/Users/ckl/development/libs-arch64-unknown-linux/del_3/usr/lib/aarch64-linux-gnu"]
+#rustflags = ["-L", "/Users/ckl/development/libs-arch64-unknown-linux/del_2"]
 
 [env]
 CXX = { value = "/Users/ckl/development/aarch64-unknown-linux-gnu/bin/aarch64-unknown-linux-gnu-g++", forced = true }
 AR = { value = "/Users/ckl/development/aarch64-unknown-linux-gnu/bin/aarch64-unknown-linux-gnu-ar", forced = true }
 CC = { value = "/Users/ckl/development/aarch64-unknown-linux-gnu/bin/aarch64-unknown-linux-gnu-cc", forced = true }
+PKG_CONFIG_SYSROOT_DIR = { value = "/Users/ckl/development/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/sysroot", forced = true }
+PKG_CONFIG_PATH = { value = "/Users/ckl/development/libs-arch64-unknown-linux/sigrok/lib/pkgconfig/", forced = true }
+#PKG_CONFIG_PATH = { value = "/Users/ckl/development/libs-arch64-unknown-linux/del_3/usr/lib/aarch64-linux-gnu/pkgconfig", forced = true }
+#PKG_CONFIG_SYSROOT_DIR = { value = "/Users/ckl/development/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/sysroot", forced = true }
+#PKG_CONFIG_PATH = { value = "/Users/ckl/development/libs-arch64-unknown-linux/del_2/pkgconfig", forced = true }
+
 
 [build]
 target = "aarch64-unknown-linux-gnu"

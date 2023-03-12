@@ -117,7 +117,7 @@ impl Engine {
     {
         self.state.time += parameter.elapsed_time;
         self.state.eye += parameter.eye;
-        self.state.rotation += parameter.rotation;
+        self.state.rotation = parameter.rotation;
         if parameter.print_state {
             println!("Eye Pos:{}, Rotation:{}", self.state.eye, self.state.rotation);
         }

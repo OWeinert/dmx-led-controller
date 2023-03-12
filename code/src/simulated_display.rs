@@ -4,37 +4,23 @@
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 mod render_engine;
+mod logicAnalyzer;
 
-use std::ffi::CString;
-use std::os::raw::{c_char, c_int};
-
-
-#[repr(transparent)]
-struct RustObject {
-    a: i32,
-    // Other members...
-}
-
-extern "C" fn callback(target: *mut RustObject, a: i32) {
-    println!("I'm called from C with value {0}", a);
-    unsafe {
-        // Update the value in RustObject with the value received from the callback:
-        (*target).a = a;
-    }
-}
-
-#[link(name = "saleaeLogic", kind = "static")]
-extern {
-    fn mainC(target: *mut RustObject,
-                         cb: extern fn(*mut RustObject, i32)) -> i32;
-}
+use std::sync::mpsc;
+use std::thread;
+use crate::logicAnalyzer::start_logic_analyzer;
 
 fn main() {
-    // Create the object that will be referenced in the callback:
-    let mut rust_object = Box::new(RustObject { a: 5 });
+    let (tx, rx) = mpsc::channel();
+    thread::spawn(move || {
+        start_logic_analyzer(tx);
+    });
 
-    unsafe {
-        mainC(&mut *rust_object, callback);
+    loop {
+        let received = rx.try_recv();
+        if received.is_ok() {
+            let received = received.unwrap();
+            println!("received: {}", received);
+        }
     }
-    println!("{}", rust_object.a);
 }
