@@ -145,12 +145,13 @@ void show_pd_annotations(struct srd_proto_data *pdata, void *cb_data)
 	struct srd_decoder *dec;
 	struct srd_proto_data_annotation *pda;
 
-	(void)cb_data;
+    struct callbackData *myWayIntoRust = cb_data;
+    myWayIntoRust->cb(myWayIntoRust->cb_target, 7);
 
 	dec = pdata->pdo->di->decoder;
 	pda = pdata->data;
 
 	/* Google Trace Events are rather special. Use a separate code path. */
-    jsontrace_annotation(dec, pda, pdata);
+   // jsontrace_annotation(dec, pda, pdata);
 }
 

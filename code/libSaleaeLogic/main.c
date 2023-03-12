@@ -98,8 +98,13 @@ gchar *opt_output_file = NULL;
 gchar *opt_drv = "fx2lafw";
 gchar *opt_output_format = NULL;
 
-int mainC()
+
+int mainC(void* callback_target, rust_callback callback)
 {
+    struct callbackData callbackData = {
+            .cb =  callback,
+            .cb_target = callback_target
+    };
 	g_log_set_default_handler(logger, NULL);
 
 	/* Set the loglevel (amount of messages to output) for libsigrok. */
@@ -123,7 +128,7 @@ int mainC()
         goto done;
 
     if (srd_pd_output_callback_add(srd_sess, SRD_OUTPUT_ANN,
-            show_pd_annotations, NULL) != SRD_OK)
+            show_pd_annotations, &callbackData) != SRD_OK)
         goto done;
 
     run_session();

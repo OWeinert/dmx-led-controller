@@ -27,11 +27,18 @@
 #define DEFAULT_OUTPUT_FORMAT_NOFILE "bits:width=64"
 
 /* main.c */
+
+
+typedef void (*rust_callback)(void*, int32_t);
+struct callbackData {
+    void* cb_target;
+    rust_callback cb;
+};
+
 extern gint opt_loglevel;
 extern gchar *opt_output_file;
 extern gchar *opt_drv;
 extern gchar *opt_output_format;
-int mainC();
 extern struct sr_context *sr_ctx;
 int select_channels(struct sr_dev_inst *sdi);
 int maybe_config_get(struct sr_dev_driver *driver,
