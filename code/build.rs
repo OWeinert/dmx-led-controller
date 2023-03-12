@@ -7,18 +7,18 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
-    println!("cargo:rerun-if-changed=libSaleaeLogic");
+    println!("cargo:rerun-if-changed=libLogicAnalyzer");
 
-    let dst = Config::new("libSaleaeLogic").build();
+    let dst = Config::new("libLogicAnalyzer").build();
     println!("cargo:rustc-link-search=native={}", dst.display());
-    println!("cargo:rustc-link-lib=static=saleaeLogic");
+    println!("cargo:rustc-link-lib=static=logicAnalyzer");
 
     let mut vec: Vec<Library> = Vec::new();
     vec.push(pkg_config::probe_library("glib-2.0").unwrap());
     vec.push(pkg_config::probe_library("libsigrok").unwrap());
     vec.push(pkg_config::probe_library("libsigrokdecode").unwrap());
 
-    let mut builder = bindgen::Builder::default().header("libSaleaeLogic/wrapper.h");
+    let mut builder = bindgen::Builder::default().header("libLogicAnalyzer/logicAnalyzer.h");
     let paths = vec
         .iter()
         .flat_map(|lib| lib.include_paths.to_vec());
