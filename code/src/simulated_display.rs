@@ -25,7 +25,7 @@ fn main() {
     let mut command = Command::new("./../uDMX commandline/uDMX");
     let mut start_dmx = command.arg("0");   // start address, channel 1 for dmx analyzer
 
-    let my_array = [11, 22, 33, 44, 55, 66];
+    let my_array = [0x11, 0x22, 0x33, 0x44, 0x55, 0x66];
     for item in my_array.iter() {
         start_dmx.arg(item.to_string());
     }
@@ -44,7 +44,7 @@ fn main() {
         let received = rx.try_recv();
         if received.is_ok() {
             let received = received.unwrap();
-            println!("{:?}", received);
+            println!("length:{}, {:02X?}", received.channels.len(), received);
         }
     }
 }

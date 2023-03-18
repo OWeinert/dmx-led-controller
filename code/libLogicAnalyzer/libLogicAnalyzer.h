@@ -1,6 +1,5 @@
 /*
- * This file is part of the sigrok-cli project.
- *
+ * This library is based from the sigrok-cli project.
  * Copyright (C) 2011 Bert Vermeulen <bert@biot.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SIGROK_CLI_SIGROK_CLI_H
-#define SIGROK_CLI_SIGROK_CLI_H
+#ifndef LIB_LOGIC_ANALYZER_H
+#define LIB_LOGIC_ANALYZER_H
 
 #include <libsigrok/libsigrok.h>
 #include <libsigrokdecode/libsigrokdecode.h>
@@ -26,33 +25,24 @@
 #define SAMPLE_RATE ((uint64_t) 24e6) // 24 MHz
 #define MAX_LENGTH_DMX 22754e-6 // max dmx packet length: 22754 µs
 #define LIMIT_SAMPLES ((uint64_t) ((2.1 *MAX_LENGTH_DMX) * SAMPLE_RATE))
+#define CHANNEL 1
+#define PROTOCOL_DECODER "dmx512"
+#define LOGIC_ANALYZER_DEVICE "fx2lafw"
 
-/* main.c */
-extern gint opt_loglevel;
+/* libLogicAnalyzer.c */
 struct CallbackData {
     void* rustData;
     void (*onDecoderAnnotation) (void*, struct srd_proto_data*);
 };
-
 __attribute__((unused)) int runAnalyzer(struct CallbackData* callbackData);
 
 /* device.c */
-GSList *device_scan(struct sr_context *sr_ctx);
-int set_dev_options(struct sr_dev_inst *sdi);
-
-/* session.c */
-struct cb_data {
-    struct srd_session *srd_session;
-    struct sr_session *sr_session;
-    int receivingEnabled;
-    struct srd_decoder_inst *di;
-};
-void sr_session_callback(const struct sr_dev_inst *sdi,
-                         const struct sr_datafeed_packet *packet, void *cb_data);
-void run_session(struct sr_dev_inst *sdi, struct sr_context *sr_ctx, struct srd_session *srd_session, struct srd_decoder_inst *di);
+int device_init(struct sr_dev_inst **mySaleaeLogic, struct sr_context *sr_ctx);
 
 /* decode.c */
-void srd_callback(struct srd_proto_data *pdata, void *cb_data);
-int  register_pd_with_channels(struct sr_dev_inst *sdi, struct srd_decoder_inst *di);
+int sigrok_decode_session_start(struct srd_session **srd_sess, struct CallbackData* callbackData, gint opt_loglevel, struct srd_decoder_inst **di, struct sr_dev_inst *sdi);
+
+/* session.c */
+void run_session(struct sr_dev_inst *sdi, struct sr_context *sr_ctx, struct srd_session *srd_session);
 
 #endif

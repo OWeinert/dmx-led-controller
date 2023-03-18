@@ -56,7 +56,7 @@ struct DecoderAnnotation {
 
 #[derive(Debug)]
 pub struct DmxPacket {
-    channels: Vec<u8>,
+    pub channels: Vec<u8>,
 }
 
 unsafe extern "C" fn on_decoder_data(
