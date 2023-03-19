@@ -19,9 +19,7 @@ fn main() {
     vec.push(pkg_config::probe_library("libsigrokdecode").unwrap());
 
     let mut builder = bindgen::Builder::default().header("libLogicAnalyzer/libLogicAnalyzer.h");
-    let paths = vec
-        .iter()
-        .flat_map(|lib| lib.include_paths.to_vec());
+    let paths = vec.iter().flat_map(|lib| lib.include_paths.to_vec());
     for path in paths {
         builder = builder.clang_arg(format!("-I{}", path.to_str().unwrap()));
     }

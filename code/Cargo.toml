@@ -28,11 +28,11 @@ bindgen = "0.64.0"
 
 [[bin]]
 name = "main"
-path = "src/main.rs"
+path = "src/main_hardware_display.rs"
 required-features = ["rpi-led-matrix"]
 
 # cargo run with --no-default-features flag
 [[bin]]
 name = "simulate-display"
-path = "src/simulated_display.rs"
+path = "src/main_simulated_display.rs"
 required-features = ["embedded-graphics-simulator"]

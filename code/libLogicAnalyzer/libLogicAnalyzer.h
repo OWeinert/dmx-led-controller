@@ -22,10 +22,10 @@
 #include <libsigrok/libsigrok.h>
 #include <libsigrokdecode/libsigrokdecode.h>
 
-#define SAMPLE_RATE ((uint64_t) 24e6) // 24 MHz
+#define SAMPLE_RATE ((uint64_t) 2e6) // 24 MHz
 #define MAX_LENGTH_DMX 22754e-6 // max dmx packet length: 22754 µs
 #define LIMIT_SAMPLES ((uint64_t) ((2.1 *MAX_LENGTH_DMX) * SAMPLE_RATE))
-#define CHANNEL 1
+#define CHANNEL 0   // Ch1 has index 0
 #define PROTOCOL_DECODER "dmx512"
 #define LOGIC_ANALYZER_DEVICE "fx2lafw"
 
