@@ -111,23 +111,23 @@ unsafe extern "C" fn on_decoder_data(
     target.sender.send(annotations).unwrap();
 }
 
-fn start_logic_analyzer(tx: Sender<DecoderAnnotation>) {
+fn start_logic_analyzer(tx: Sender<DecoderAnnotation>, from_device: bool) {
     let mut rust_data = Box::new(RustData { sender: tx.clone() });
     let mut callback_data = Box::new(CallbackData {
         rustData: &mut *rust_data as *mut _ as *mut c_void,
         onDecoderAnnotation: Some(on_decoder_data),
     });
     unsafe {
-        runAnalyzer(&mut *callback_data);
+        runAnalyzer(&mut *callback_data, from_device);
     }
 }
 
-pub fn get_dmx_data(tx: Sender<DmxPacket>) {
+pub fn get_dmx_data(tx: Sender<DmxPacket>, from_device: bool) {
     let (tx_internal, rx_internal) = mpsc::channel();
     loop {
         let tx_clone = tx_internal.clone();
         let thread_join_handle = thread::spawn(move || {
-            start_logic_analyzer(tx_clone);
+            start_logic_analyzer(tx_clone, from_device);
         });
         let mut data = Vec::<u8>::new();
         'receiving: loop {

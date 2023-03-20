@@ -81,9 +81,10 @@ int sigrok_decode_session_start(struct srd_session **srd_sess, struct CallbackDa
         return SRD_ERR;
     }
 
-    if (register_pd_with_channels(sdi, *di) != SRD_OK) {
-        g_critical("logic analyzer: Error 203 occurred, exiting");
-        return SRD_ERR;
+    // only if reading explicitly from device, and not a file
+    if (sdi && register_pd_with_channels(sdi, *di) != SRD_OK) {
+          g_critical("logic analyzer: Error 203 occurred, exiting");
+          return SRD_ERR;
     }
     if (srd_session_start(*srd_sess) != SRD_OK) {
         g_critical("Failed to start decode session.");

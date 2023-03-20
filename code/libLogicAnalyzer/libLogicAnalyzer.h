@@ -19,10 +19,11 @@
 #ifndef LIB_LOGIC_ANALYZER_H
 #define LIB_LOGIC_ANALYZER_H
 
+#include <stdbool.h>
 #include <libsigrok/libsigrok.h>
 #include <libsigrokdecode/libsigrokdecode.h>
 
-#define SAMPLE_RATE ((uint64_t) 2e6) // 24 MHz
+#define SAMPLE_RATE ((uint64_t) 2e6) // 2 MHz
 #define MAX_LENGTH_DMX 22754e-6 // max dmx packet length: 22754 µs
 #define LIMIT_SAMPLES ((uint64_t) ((2.1 *MAX_LENGTH_DMX) * SAMPLE_RATE))
 #define CHANNEL 0   // Ch1 has index 0
@@ -34,7 +35,7 @@ struct CallbackData {
     void* rustData;
     void (*onDecoderAnnotation) (void*, struct srd_proto_data*);
 };
-__attribute__((unused)) int runAnalyzer(struct CallbackData* callbackData);
+__attribute__((unused)) int runAnalyzer(struct CallbackData* callbackData, bool fromDevice);
 
 /* device.c */
 int device_init(struct sr_dev_inst **mySaleaeLogic, struct sr_context *sr_ctx);
@@ -43,6 +44,14 @@ int device_init(struct sr_dev_inst **mySaleaeLogic, struct sr_context *sr_ctx);
 int sigrok_decode_session_start(struct srd_session **srd_sess, struct CallbackData* callbackData, gint opt_loglevel, struct srd_decoder_inst **di, struct sr_dev_inst *sdi);
 
 /* session.c */
+struct cb_data {
+    struct srd_session *srd_session;
+    struct sr_session *sr_session;
+};
+void sr_session_callback(const struct sr_dev_inst *sdi, const struct sr_datafeed_packet *packet, void *cb_data);
 void run_session(struct sr_dev_inst *sdi, struct sr_context *sr_ctx, struct srd_session *srd_session);
+
+/* input.c */
+void load_input_file(struct sr_context *sr_ctx, struct srd_session *srd_session);
 
 #endif

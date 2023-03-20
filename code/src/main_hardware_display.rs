@@ -22,7 +22,7 @@ fn main() {
     };
     let matrix = LedMatrix::new(Some(options), Some(rt_options)).unwrap();
     let mut canvas = matrix.offscreen_canvas();
-    let mut controller = Controller::new();
+    let mut controller = Controller::new(false, false);
 
     loop {
         let received = controller.rx.try_recv();

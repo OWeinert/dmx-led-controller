@@ -19,7 +19,7 @@ fn main() {
         ..update(&display);
     };
 
-    let mut controller = Controller::new();
+    let mut controller = Controller::new(false, false);
 
     'running: loop {
         for event in window.events() {

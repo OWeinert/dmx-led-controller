@@ -17,11 +17,6 @@
 #include <stdlib.h>
 #include "libLogicAnalyzer.h"
 
-struct cb_data {
-    struct srd_session *srd_session;
-    struct sr_session *sr_session;
-};
-
 void sr_session_callback(const struct sr_dev_inst *sdi, const struct sr_datafeed_packet *packet, void *cb_data)
 {
 	static uint64_t received_samples = 0;

@@ -15,6 +15,7 @@
 
 #include <stdlib.h>
 #include <glib.h>
+#include <stdbool.h>
 #include "libLogicAnalyzer.h"
 
 static void logger(const gchar *log_domain, GLogLevelFlags log_level,
@@ -36,7 +37,7 @@ static void logger(const gchar *log_domain, GLogLevelFlags log_level,
 		exit(1);
 }
 
-__attribute__((unused)) int runAnalyzer(struct CallbackData* callbackData)
+__attribute__((unused)) int runAnalyzer(struct CallbackData* callbackData, bool fromDevice)
 {
     gint opt_loglevel = SR_LOG_WARN; /* Show errors+warnings by default. */
 	g_log_set_default_handler(logger, &opt_loglevel);
@@ -53,9 +54,9 @@ __attribute__((unused)) int runAnalyzer(struct CallbackData* callbackData)
         g_critical("logic analyzer: Error 101 occurred, exiting");
         goto done;
     }
-
     struct sr_dev_inst *mySaleaeLogic = NULL;
-    if (device_init(&mySaleaeLogic, sr_ctx) != SR_OK) {
+
+    if (fromDevice && device_init(&mySaleaeLogic, sr_ctx) != SR_OK) {
         g_critical("logic analyzer: Error 102 occurred, exiting");
         goto done;
     }
@@ -66,7 +67,11 @@ __attribute__((unused)) int runAnalyzer(struct CallbackData* callbackData)
         g_critical("logic analyzer: Error 103 occurred, exiting");
         goto done;
     }
-    run_session(mySaleaeLogic, sr_ctx, srd_session);
+    if (fromDevice) {
+        run_session(mySaleaeLogic, sr_ctx, srd_session);
+    } else {
+        load_input_file(sr_ctx, srd_session);
+    }
 
     g_mutex_lock (&decoder_instant->data_mutex);
     while (!decoder_instant->handled_all_samples)
