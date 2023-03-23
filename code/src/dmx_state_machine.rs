@@ -1,4 +1,4 @@
-use crate::logic_analyzer::{DecoderAnnotation, Dmx512AnnotatorCode, Dmx512AnnotatorPayload};
+use crate::logic_analyzer::{DecoderAnnotation, Dmx512AnnotatorPayload};
 
 pub struct ChannelData {
     pub(crate) channel: [u8; 512],

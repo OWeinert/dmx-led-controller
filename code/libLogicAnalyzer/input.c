@@ -20,7 +20,7 @@
 void load_input_file(struct sr_context *sr_ctx, struct srd_session *srd_session)
 {
     struct sr_session *session;
-    if (sr_session_load(sr_ctx, "assets/example.sr", &session) == SR_OK) {
+    if (sr_session_load(sr_ctx, "assets/sigrok_sessions/colored_spacecraft.sr", &session) == SR_OK) {
         /* sigrok session file */
         GSList *devices;
         if (sr_session_dev_list(session, &devices) != SR_OK || !devices || !devices->data) {

@@ -67,7 +67,7 @@ pub struct DecoderAnnotation {
     pub payload: Dmx512AnnotatorPayload,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct DmxPacket {
     pub channels: [u8; 512],
 }
@@ -157,7 +157,7 @@ pub fn get_dmx_data(tx: Sender<DmxPacket>, from_device: bool) {
                     println!("Mark after Break length: {}", mab.packet.end_sample - mab.packet.start_sample);
                     tx.send(DmxPacket { channels: channel.channel }).unwrap();
                 }
-                thread::sleep(Duration::from_secs(60));
+                thread::sleep(Duration::from_millis(100));
                 break 'receiving;
             }
         }
