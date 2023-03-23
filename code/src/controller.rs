@@ -26,7 +26,7 @@ impl Controller {
             let start_dmx = command.arg("0"); // start address, channel 1 for dmx analyzer
 
             let my_array = [
-                0x04, 0x08, 0x0C,
+                      0x04, 0x08, 0x0C,
                 0x10, 0x14, 0x18, 0x1C,
                 0x20, 0x24, 0x28, 0x2C,
                 0x30, 0x34, 0x38, 0x3C,
@@ -58,7 +58,7 @@ impl Controller {
         let screen_height = display.bounding_box().size.height;
 
         let channels = parameter.channels.channels;
-        for (index, value) in channels[..=64].iter().enumerate() {
+        for (index, value) in channels.iter().enumerate() {
             let x_start = index as i32;
             let y_start = screen_height as i32;
             let y_end = y_start - (*value as f32 * (64.0 / 255.0)) as i32;

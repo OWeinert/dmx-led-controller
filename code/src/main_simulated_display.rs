@@ -1,5 +1,6 @@
 mod controller;
 mod logic_analyzer;
+mod dmx_state_machine;
 
 use cascade::cascade;
 use embedded_graphics::{pixelcolor::Rgb888, prelude::*};

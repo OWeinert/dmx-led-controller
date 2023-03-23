@@ -11,6 +11,7 @@ use crate::logic_analyzer::CLib::{
     CallbackData,
 };
 use core::convert::TryFrom;
+use std::convert::From;
 use derive_try_from_primitive::TryFromPrimitive;
 use scan_fmt::scan_fmt;
 use std::ffi::c_void;
@@ -18,6 +19,7 @@ use std::sync::mpsc;
 use std::sync::mpsc::Sender;
 use std::thread;
 use std::time::Duration;
+use crate::dmx_state_machine::*;
 
 struct RustData {
     sender: Sender<DecoderAnnotation>,
@@ -29,7 +31,7 @@ struct RustData {
 #[derive(TryFromPrimitive)]
 #[repr(i32)]
 #[derive(Debug, PartialEq)]
-enum Dmx512Annotator {
+pub enum Dmx512AnnotatorCode {
     Bit = 0,
     Break = 1,
     MarkAfterBreak = 2,
@@ -44,24 +46,30 @@ enum Dmx512Annotator {
 }
 
 #[derive(Debug)]
-enum AnnotationPayload {
-    Data(u8),
-    ChannelId(u16),
+pub enum Dmx512AnnotatorPayload {
     Bit(bool),
-    AnnotationError(String),
+    Break,
+    MarkAfterBreak,
+    Startbit,
+    Stopbit,
+    Startcode,
+    Channel(u16),
+    Interframe,
+    Interpacket,
+    Data(u8),
+    ErrorCode(String),
 }
 
 #[derive(Debug)]
-struct DecoderAnnotation {
-    _start_sample: u64,
-    _end_sample: u64,
-    annotation_type: Dmx512Annotator,
-    payload: Option<AnnotationPayload>,
+pub struct DecoderAnnotation {
+    pub start_sample: u64,
+    pub end_sample: u64,
+    pub payload: Dmx512AnnotatorPayload,
 }
 
 #[derive(Debug)]
 pub struct DmxPacket {
-    pub channels: Vec<u8>,
+    pub channels: [u8; 512],
 }
 
 unsafe extern "C" fn on_decoder_data(
@@ -77,32 +85,38 @@ unsafe extern "C" fn on_decoder_data(
             .to_str()
             .unwrap();
 
-    let annotation_type = Dmx512Annotator::try_from(annotation_data.ann_class).unwrap();
-    let payload = match annotation_type {
-        Dmx512Annotator::Bit => {
+    let annotation_type = Dmx512AnnotatorCode::try_from(annotation_data.ann_class).unwrap();
+
+    let payload_test: Dmx512AnnotatorPayload = match annotation_type {
+        Dmx512AnnotatorCode::Bit => {
             let bit = scan_fmt!(annotation_payload_text, "{1d}", u8).unwrap() == 1;
-            Some(AnnotationPayload::Bit(bit))
+            Dmx512AnnotatorPayload::Bit(bit)
         }
-        Dmx512Annotator::Channel => {
+        Dmx512AnnotatorCode::Channel => {
             let channel = scan_fmt!(annotation_payload_text, "Channel {3d}", u16).unwrap();
-            Some(AnnotationPayload::ChannelId(channel))
+            Dmx512AnnotatorPayload::Channel(channel)
         }
-        Dmx512Annotator::Data => {
+        Dmx512AnnotatorCode::Data => {
             let (data_dec, _) =
                 scan_fmt!(annotation_payload_text, "{3d} / {4x}}", u8, [hex u8]).unwrap();
-            Some(AnnotationPayload::Data(data_dec))
+            Dmx512AnnotatorPayload::Data(data_dec)
         }
-        Dmx512Annotator::ErrorCode => {
-            Some(AnnotationPayload::AnnotationError(String::from("error")))
+        Dmx512AnnotatorCode::ErrorCode => {
+            Dmx512AnnotatorPayload::ErrorCode(String::from("error"))
         }
-        _ => None,
+        Dmx512AnnotatorCode::Break => Dmx512AnnotatorPayload::Break,
+        Dmx512AnnotatorCode::MarkAfterBreak => Dmx512AnnotatorPayload::MarkAfterBreak,
+        Dmx512AnnotatorCode::Startbit => Dmx512AnnotatorPayload::Startbit,
+        Dmx512AnnotatorCode::Stopbit => Dmx512AnnotatorPayload::Stopbit,
+        Dmx512AnnotatorCode::Startcode => Dmx512AnnotatorPayload::Startcode,
+        Dmx512AnnotatorCode::Interframe => Dmx512AnnotatorPayload::Interframe,
+        Dmx512AnnotatorCode::Interpacket => Dmx512AnnotatorPayload::Interpacket,
     };
 
     let annotations = DecoderAnnotation {
-        _start_sample: protokoll_data.start_sample,
-        _end_sample: protokoll_data.end_sample,
-        annotation_type,
-        payload,
+        start_sample: protokoll_data.start_sample,
+        end_sample: protokoll_data.end_sample,
+        payload: payload_test
     };
     // println!("{:?}", annotations);
     let target = (&mut *rust_data as *mut _ as *mut RustData)
@@ -129,24 +143,21 @@ pub fn get_dmx_data(tx: Sender<DmxPacket>, from_device: bool) {
         let thread_join_handle = thread::spawn(move || {
             start_logic_analyzer(tx_clone, from_device);
         });
-        let mut data = Vec::<u8>::new();
+
+        let mut dmx_state_machine = DmxStateMachineState::Idle();
         'receiving: loop {
             let received = rx_internal.try_recv();
             if received.is_ok() {
                 let annotation = received.unwrap();
                 //println!("{:?}", annotation);
-                match annotation.annotation_type {
-                    Dmx512Annotator::Data => {
-                        if let Some(AnnotationPayload::Data(value)) = annotation.payload {
-                            data.push(value)
-                        }
-                    }
-                    _ => continue,
-                }
+                dmx_state_machine = dmx_state_machine.transition(annotation);
             }
             if thread_join_handle.is_finished() {
-                tx.send(DmxPacket { channels: data }).unwrap();
-                thread::sleep(Duration::from_millis(1000));
+                if let DmxStateMachineState::End(channel, mab) = dmx_state_machine {
+                    println!("Mark after Break length: {}", mab.packet.end_sample - mab.packet.start_sample);
+                    tx.send(DmxPacket { channels: channel.channel }).unwrap();
+                }
+                thread::sleep(Duration::from_secs(60));
                 break 'receiving;
             }
         }
