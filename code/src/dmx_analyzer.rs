@@ -1,16 +1,14 @@
-use embedded_graphics::{
-    pixelcolor::Rgb888,
-    prelude::*,
-};
+pub mod logic_analyzer;
+pub mod dmx_state_machine;
+
+
 use std::{fmt::Debug, thread};
 use std::process::Command;
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver};
+use logic_analyzer::{DmxPacket, get_dmx_data};
 
-use embedded_graphics::primitives::{Line, PrimitiveStyle};
-use crate::logic_analyzer::{DmxPacket, get_dmx_data};
-
-pub struct Controller {
+pub struct DmxAnalyzer {
     pub rx: Receiver<DmxPacket>,
 }
 
@@ -19,8 +17,8 @@ pub struct Parameter {
     pub channels: DmxPacket,
 }
 
-impl Controller {
-    pub fn new(from_device: bool, set_u_dmx_output: bool) -> Controller {
+impl DmxAnalyzer {
+    pub fn new(from_device: bool, set_u_dmx_output: bool) -> DmxAnalyzer {
         if set_u_dmx_output {
             // set dmx output -> ch1: 0xAD, ch2: 0xBE, ch3: 0xD0
             let mut command = Command::new("./../uDMX commandline/uDMX");
@@ -56,26 +54,6 @@ impl Controller {
         thread::spawn(move || {
             get_dmx_data(tx, from_device);
         });
-        return Controller{rx};
-    }
-
-    pub fn on_user_update<D>(&mut self, display: &mut D, parameter: Parameter)
-    where
-        D: DrawTarget<Color = Rgb888>,
-        D::Error: Debug,
-    {
-        let _screen_width = display.bounding_box().size.width;
-        let screen_height = display.bounding_box().size.height;
-
-        let channels = parameter.channels.channels;
-        for (index, value) in channels.iter().enumerate() {
-            let x_start = index as i32;
-            let y_start = screen_height as i32;
-            let y_end = y_start - (*value as f32 * (64.0 / 255.0)) as i32;
-
-            Line::new(Point::new(x_start, y_start), Point::new(x_start, y_end))
-                .into_styled(PrimitiveStyle::with_stroke(Rgb888::WHITE, 1))
-                .draw(display).unwrap();
-        }
+        return DmxAnalyzer {rx};
     }
 }

@@ -6,7 +6,7 @@ mod CLib {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
-use crate::logic_analyzer::CLib::{
+use CLib::{
     runAnalyzer, srd_proto_data, srd_proto_data_annotation,
     CallbackData,
 };
@@ -19,7 +19,7 @@ use std::sync::mpsc;
 use std::sync::mpsc::Sender;
 use std::thread;
 use std::time::Duration;
-use crate::dmx_state_machine::*;
+use super::dmx_state_machine::*;
 
 struct RustData {
     sender: Sender<DecoderAnnotation>,
@@ -53,9 +53,9 @@ pub enum Dmx512AnnotatorPayload {
     Startbit,
     Stopbit,
     Startcode,
-    Channel(u16),
-    Interframe,
-    Interpacket,
+    ChannelNr(u16),
+    InterFrame,
+    InterPacket,
     Data(u8),
     ErrorCode(String),
 }
@@ -94,7 +94,7 @@ unsafe extern "C" fn on_decoder_data(
         }
         Dmx512AnnotatorCode::Channel => {
             let channel = scan_fmt!(annotation_payload_text, "Channel {3d}", u16).unwrap();
-            Dmx512AnnotatorPayload::Channel(channel)
+            Dmx512AnnotatorPayload::ChannelNr(channel)
         }
         Dmx512AnnotatorCode::Data => {
             let (data_dec, _) =
@@ -109,8 +109,8 @@ unsafe extern "C" fn on_decoder_data(
         Dmx512AnnotatorCode::Startbit => Dmx512AnnotatorPayload::Startbit,
         Dmx512AnnotatorCode::Stopbit => Dmx512AnnotatorPayload::Stopbit,
         Dmx512AnnotatorCode::Startcode => Dmx512AnnotatorPayload::Startcode,
-        Dmx512AnnotatorCode::Interframe => Dmx512AnnotatorPayload::Interframe,
-        Dmx512AnnotatorCode::Interpacket => Dmx512AnnotatorPayload::Interpacket,
+        Dmx512AnnotatorCode::Interframe => Dmx512AnnotatorPayload::InterFrame,
+        Dmx512AnnotatorCode::Interpacket => Dmx512AnnotatorPayload::InterPacket,
     };
 
     let annotations = DecoderAnnotation {
@@ -153,12 +153,14 @@ pub fn get_dmx_data(tx: Sender<DmxPacket>, from_device: bool) {
                 dmx_state_machine = dmx_state_machine.transition(annotation);
             }
             if thread_join_handle.is_finished() {
-                if let DmxStateMachineState::End(channel, mab) = dmx_state_machine {
-                    println!("Mark after Break length: {}", mab.packet.end_sample - mab.packet.start_sample);
+                if let DmxStateMachineState::End(bits, channel) = dmx_state_machine {
+                    println!("{:?}", bits);
+                    //println!("Mark after Break length: {}", mab.packet.end_sample - mab.packet.start_sample);
                     tx.send(DmxPacket { channels: channel.channel }).unwrap();
                 }
-                thread::sleep(Duration::from_millis(100));
-                break 'receiving;
+                loop {}
+                thread::sleep(Duration::from_millis(10000));
+                //break 'receiving;
             }
         }
     }

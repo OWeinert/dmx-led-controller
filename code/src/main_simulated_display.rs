@@ -1,8 +1,5 @@
-mod controller;
-mod logic_analyzer;
-mod dmx_state_machine;
-
-mod render_engine;
+mod dmx_analyzer;
+mod views;
 
 use cascade::cascade;
 use embedded_graphics::{
@@ -15,11 +12,14 @@ use embedded_graphics_simulator::{
     SimulatorEvent,
     Window,
     sdl2::Keycode};
-use render_engine::{Engine};
 use std::time::{Instant};
 
-use controller::{Controller};
-use crate::logic_analyzer::DmxPacket;
+use dmx_analyzer::{DmxAnalyzer};
+use dmx_analyzer::logic_analyzer::DmxPacket;
+use views::Views;
+use views::ViewController;
+use crate::views::dmx_info_screen::ParameterDmxInfoScreen;
+use crate::views::RenderEngineProps;
 
 fn main() {
     let output_settings = OutputSettingsBuilder::new()
@@ -37,17 +37,17 @@ fn main() {
         "assets/objects/video_ship.obj",
         "assets/objects/teapot.obj"
     ];
-    let mut engine = Engine::new(&str[1], &mut display);
+    let mut view = ViewController::new(str[1], &mut display);
     let mut last: Instant = Instant::now();
 
-    let mut controller = Controller::new(true, true);
+    let controller = DmxAnalyzer::new(false, false);
 
-    let mut parameter_dmx = controller::Parameter {
+    let mut parameter_dmx = dmx_analyzer::Parameter {
         channels: DmxPacket{channels: [0; 512]}
     };
     'running: loop {
         let now = Instant::now();
-        let mut parameter_3d_engine = render_engine::Parameter{
+        let mut parameter_3d_engine = views::render_engine::Parameter{
             eye: Default::default(),
             rotation: 0.01,
             elapsed_time: now - last,
@@ -84,17 +84,16 @@ fn main() {
         if received.is_ok() {
             let received = received.unwrap();
             println!("length:{}, {:02X?}", received.channels.len(), received);
-            parameter_dmx = controller::Parameter {
+            parameter_dmx = dmx_analyzer::Parameter {
                 channels: received
             };
         }
 
-        engine.on_user_update(&mut display, parameter_3d_engine);
-        controller.on_user_update(&mut display, parameter_dmx.clone());
+       // let props = Views::RenderEngine(RenderEngineProps{parameter_render_engine: parameter_3d_engine, parameter_dmx_channels: parameter_dmx.clone()});
+        let props = Views::Channel1Timing(ParameterDmxInfoScreen{});
+        view.on_user_update(&mut display, props);
         last = now;
         window.update(&display);
         display.clear(Rgb888::new(0, 0, 0)).unwrap();
-
-
     }
 }
