@@ -1,5 +1,5 @@
 [package]
-name = "led-matrix-controller"
+name = "dmx-analyzer"
 version = "0.1.0"
 edition = "2021"
 authors = ["Conrad Klaus"]
@@ -17,6 +17,9 @@ wavefront_obj = "10.0.0"
 regex = "1"
 derive-try-from-primitive = "1.0.0"
 scan_fmt = "0.2.6"
+measurements = "0.11.0"
+strum = "0.24.1"
+strum_macros = "0.24"
 
 [features]
 default = ["rpi-led-matrix"]

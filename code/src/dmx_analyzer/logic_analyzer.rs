@@ -1,3 +1,18 @@
+use core::convert::TryFrom;
+use std::convert::From;
+use std::ffi::c_void;
+use std::sync::mpsc;
+use std::sync::mpsc::Sender;
+use std::thread;
+
+use derive_try_from_primitive::TryFromPrimitive;
+use measurements::Frequency;
+use scan_fmt::scan_fmt;
+
+use CLib::{runAnalyzer, srd_proto_data, srd_proto_data_annotation, CallbackData};
+
+use super::dmx_state_machine::*;
+
 #[allow(non_snake_case)]
 #[allow(non_upper_case_globals)]
 #[allow(non_camel_case_types)]
@@ -5,21 +20,6 @@
 mod CLib {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
-
-use CLib::{
-    runAnalyzer, srd_proto_data, srd_proto_data_annotation,
-    CallbackData,
-};
-use core::convert::TryFrom;
-use std::convert::From;
-use derive_try_from_primitive::TryFromPrimitive;
-use scan_fmt::scan_fmt;
-use std::ffi::c_void;
-use std::sync::mpsc;
-use std::sync::mpsc::Sender;
-use std::thread;
-use std::time::Duration;
-use super::dmx_state_machine::*;
 
 struct RustData {
     sender: Sender<DecoderAnnotation>,
@@ -67,11 +67,6 @@ pub struct DecoderAnnotation {
     pub payload: Dmx512AnnotatorPayload,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct DmxPacket {
-    pub channels: [u8; 512],
-}
-
 unsafe extern "C" fn on_decoder_data(
     rust_data: *mut std::os::raw::c_void,
     decoder_protokoll_data: *mut srd_proto_data,
@@ -101,9 +96,7 @@ unsafe extern "C" fn on_decoder_data(
                 scan_fmt!(annotation_payload_text, "{3d} / {4x}}", u8, [hex u8]).unwrap();
             Dmx512AnnotatorPayload::Data(data_dec)
         }
-        Dmx512AnnotatorCode::ErrorCode => {
-            Dmx512AnnotatorPayload::ErrorCode(String::from("error"))
-        }
+        Dmx512AnnotatorCode::ErrorCode => Dmx512AnnotatorPayload::ErrorCode(String::from("error")),
         Dmx512AnnotatorCode::Break => Dmx512AnnotatorPayload::Break,
         Dmx512AnnotatorCode::MarkAfterBreak => Dmx512AnnotatorPayload::MarkAfterBreak,
         Dmx512AnnotatorCode::Startbit => Dmx512AnnotatorPayload::Startbit,
@@ -116,7 +109,7 @@ unsafe extern "C" fn on_decoder_data(
     let annotations = DecoderAnnotation {
         start_sample: protokoll_data.start_sample,
         end_sample: protokoll_data.end_sample,
-        payload: payload_test
+        payload: payload_test,
     };
     // println!("{:?}", annotations);
     let target = (&mut *rust_data as *mut _ as *mut RustData)
@@ -125,23 +118,23 @@ unsafe extern "C" fn on_decoder_data(
     target.sender.send(annotations).unwrap();
 }
 
-fn start_logic_analyzer(tx: Sender<DecoderAnnotation>, from_device: bool) {
+fn start_logic_analyzer(tx: Sender<DecoderAnnotation>, from_device: bool, sample: Frequency) {
     let mut rust_data = Box::new(RustData { sender: tx.clone() });
     let mut callback_data = Box::new(CallbackData {
         rustData: &mut *rust_data as *mut _ as *mut c_void,
         onDecoderAnnotation: Some(on_decoder_data),
     });
     unsafe {
-        runAnalyzer(&mut *callback_data, from_device);
+        runAnalyzer(&mut *callback_data, from_device, sample.as_hertz() as u64);
     }
 }
 
-pub fn get_dmx_data(tx: Sender<DmxPacket>, from_device: bool) {
+pub fn get_dmx_data(tx: Sender<DmxOutput>, from_device: bool, sample: Frequency) {
     let (tx_internal, rx_internal) = mpsc::channel();
     loop {
         let tx_clone = tx_internal.clone();
         let thread_join_handle = thread::spawn(move || {
-            start_logic_analyzer(tx_clone, from_device);
+            start_logic_analyzer(tx_clone, from_device, sample);
         });
 
         let mut dmx_state_machine = DmxStateMachineState::Idle();
@@ -153,14 +146,13 @@ pub fn get_dmx_data(tx: Sender<DmxPacket>, from_device: bool) {
                 dmx_state_machine = dmx_state_machine.transition(annotation);
             }
             if thread_join_handle.is_finished() {
-                if let DmxStateMachineState::End(bits, channel) = dmx_state_machine {
-                    println!("{:?}", bits);
+                if let DmxStateMachineState::End(output) = dmx_state_machine {
                     //println!("Mark after Break length: {}", mab.packet.end_sample - mab.packet.start_sample);
-                    tx.send(DmxPacket { channels: channel.channel }).unwrap();
+                    tx.send(output).unwrap();
                 }
-                loop {}
-                thread::sleep(Duration::from_millis(10000));
-                //break 'receiving;
+                //loop {}
+                //thread::sleep(Duration::from_millis(10000));
+                break 'receiving;
             }
         }
     }

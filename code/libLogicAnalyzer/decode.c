@@ -42,7 +42,14 @@ int register_pd_with_channels(struct sr_dev_inst *sdi, struct srd_decoder_inst *
     return SRD_OK;
 }
 
-int sigrok_decode_session_start(struct srd_session **srd_sess, struct CallbackData* callbackData, gint opt_loglevel, struct srd_decoder_inst **di, struct sr_dev_inst *sdi) {
+int sigrok_decode_session_start(
+        struct srd_session **srd_sess,
+        struct CallbackData* callbackData,
+        gint opt_loglevel,
+        struct srd_decoder_inst **di,
+        struct sr_dev_inst *sdi,
+        uint64_t sampleRate
+) {
     /* Set the loglevel (amount of messages to output) for libsigrokdecode. */
     if (srd_log_loglevel_set(opt_loglevel) != SRD_OK) {
         g_critical("logic analyzer: Error 200 occurred, exiting");
@@ -76,7 +83,7 @@ int sigrok_decode_session_start(struct srd_session **srd_sess, struct CallbackDa
         return SRD_ERR;
     }
 
-    if (srd_session_metadata_set(*srd_sess, SRD_CONF_SAMPLERATE,g_variant_new_uint64(SAMPLE_RATE)) != SRD_OK) {
+    if (srd_session_metadata_set(*srd_sess, SRD_CONF_SAMPLERATE,g_variant_new_uint64(sampleRate)) != SRD_OK) {
         g_critical("Failed to configure decode session.");
         return SRD_ERR;
     }

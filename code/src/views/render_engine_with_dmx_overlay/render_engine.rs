@@ -1,13 +1,5 @@
 // inspired by: https://github.com/OneLoneCoder/Javidx9/tree/master/ConsoleGameEngine/BiggerProjects/Engine3D
 
-use embedded_graphics::{
-    pixelcolor::Rgb888,
-    prelude::*,
-    primitives::{Primitive, PrimitiveStyle, Triangle},
-};
-use nalgebra::{
-    ArrayStorage, Const, Isometry3, Matrix, Matrix4, Perspective3, Point3, Rotation3, Unit, Vector3,
-};
 use std::{
     f32::consts::PI,
     fmt::Debug,
@@ -15,6 +7,15 @@ use std::{
     io::{Error, ErrorKind},
     process,
     time::Duration,
+};
+
+use embedded_graphics::{
+    pixelcolor::Rgb888,
+    prelude::*,
+    primitives::{Primitive, PrimitiveStyle, Triangle},
+};
+use nalgebra::{
+    ArrayStorage, Const, Isometry3, Matrix, Matrix4, Perspective3, Point3, Rotation3, Unit, Vector3,
 };
 use wavefront_obj::obj::{parse, Primitive::Triangle as ObjTriangle};
 
@@ -55,30 +56,27 @@ impl Engine {
         D: DrawTarget<Color = Rgb888>,
         D::Error: Debug,
     {
-        let model = parse(
-            fs::read_to_string(&path).unwrap()
-        ).unwrap();
+        let model = parse(fs::read_to_string(&path).unwrap()).unwrap();
 
         let obj = &model.objects[0];
         let mut triangles: Vec<Triangle3> = Vec::new();
-        let shapes = obj.geometry
-            .iter()
-            .map(|x| &x.shapes)
-            .flatten();
+        let shapes = obj.geometry.iter().map(|x| &x.shapes).flatten();
         for shape in shapes {
             if let ObjTriangle(tri0, tri1, tri2) = shape.primitive {
                 let triangle = [tri0, tri1, tri2]
                     .map(|idx| obj.vertices[idx.0])
-                    .map(|v| Point3::from_slice(
-                        &[v.x, v.y, v.z].map(|i| i as f32)
-                    ));
+                    .map(|v| Point3::from_slice(&[v.x, v.y, v.z].map(|i| i as f32)));
                 triangles.push(Triangle3 {
                     triangle,
                     lum: None,
                 })
             } else {
-                eprintln!("{}", Error::new(
-                    ErrorKind::Other, "Loaded object files must triangulate all faces.")
+                eprintln!(
+                    "{}",
+                    Error::new(
+                        ErrorKind::Other,
+                        "Loaded object files must triangulate all faces."
+                    )
                 );
                 process::exit(1);
             }
@@ -97,16 +95,28 @@ impl Engine {
             ),
             // Ndc to screen space
             screen: Matrix4::new(
-                0.5 * screen_width, 0.0, 0.0, 0.5 * screen_width,
-                0.0, 0.5 * screen_height, 0.0, 0.5 * screen_height,
-                0.0, 0.0, 0.5, 0.5,
-                0.0, 0.0, 0.0, 1.0
+                0.5 * screen_width,
+                0.0,
+                0.0,
+                0.5 * screen_width,
+                0.0,
+                0.5 * screen_height,
+                0.0,
+                0.5 * screen_height,
+                0.0,
+                0.0,
+                0.5,
+                0.5,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
             ),
             state: State {
                 light_direction: Vector3::new(0.0, -1.0, -1.0).normalize(),
                 time: Duration::new(0, 0),
                 eye: Point3::new(0.0, -3.0, -6.0),
-                rotation: 2.0 * PI/3.0,
+                rotation: 2.0 * PI / 3.0,
             },
         }
     }
@@ -120,7 +130,10 @@ impl Engine {
         self.state.eye += parameter.eye;
         self.state.rotation += parameter.rotation;
         if parameter.print_state {
-            println!("Eye Pos:{}, Rotation:{}", self.state.eye, self.state.rotation);
+            println!(
+                "Eye Pos:{}, Rotation:{}",
+                self.state.eye, self.state.rotation
+            );
         }
 
         // Model space to world space
@@ -141,8 +154,7 @@ impl Engine {
 
         // Project triangles
         'project: for tri in &self.mesh.triangles {
-            let tri_view = tri.triangle.map(
-                |p| (model).transform_point(&p));
+            let tri_view = tri.triangle.map(|p| (model).transform_point(&p));
             let line1 = tri_view[1] - tri_view[0];
             let line2 = tri_view[2] - tri_view[0];
             let norm = Unit::new_normalize(line1.cross(&line2));
@@ -150,8 +162,8 @@ impl Engine {
             if !(norm.dot(&(tri_view[0] - self.state.eye)) < 0.0) {
                 continue 'project;
             }
-            let tri_projected = tri_view.map(
-                |p| self.projection.project_point(&view.transform_point(&p)));
+            let tri_projected =
+                tri_view.map(|p| self.projection.project_point(&view.transform_point(&p)));
             draw_order.push(Triangle3 {
                 triangle: tri_projected,
                 lum: Option::from(norm.dot(&self.state.light_direction)),
@@ -177,9 +189,7 @@ impl Engine {
                 lum = 0.3
             }
             let rgb = parameter.rgb.map(|elem| (elem * lum * 0xFF as f32) as u8);
-            let fill = PrimitiveStyle::with_fill(
-                Rgb888::new(rgb[0], rgb[1], rgb[2])
-            );
+            let fill = PrimitiveStyle::with_fill(Rgb888::new(rgb[0], rgb[1], rgb[2]));
             Triangle::from_slice(&tri_screen)
                 .into_styled(fill)
                 .draw(display)

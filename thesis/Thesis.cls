@@ -150,6 +150,7 @@ LaTeX document class]
 \usepackage{lstpatch}
 \usepackage{titlesec}
 \usepackage{tocloft}
+\usepackage{tikz}
 \lstset{captionpos=b,
 	frame=tb,
 	basicstyle=\scriptsize\ttfamily,
@@ -171,12 +172,50 @@ pdfstartview={FitV},unicode,breaklinks=true]{hyperref}
 
 
 % --------------------------
+% ----- Shadow Images  -----
+% --------------------------
+
+% some parameters for customization
+\def\shadowshift{0pt,0pt}
+\def\shadowradius{15pt}
+
+\colorlet{innercolor}{black!30}
+\colorlet{outercolor}{gray!00}
+
+% this draws a shadow under a rectangle node
+\newcommand\drawshadow[1]{
+	\begin{pgfonlayer}{shadow}
+		\shade[outercolor,inner color=innercolor,outer color=outercolor] ($(#1.south west)+(\shadowshift)+(\shadowradius/2,\shadowradius/2)$) circle (\shadowradius);
+		\shade[outercolor,inner color=innercolor,outer color=outercolor] ($(#1.north west)+(\shadowshift)+(\shadowradius/2,-\shadowradius/2)$) circle (\shadowradius);
+		\shade[outercolor,inner color=innercolor,outer color=outercolor] ($(#1.south east)+(\shadowshift)+(-\shadowradius/2,\shadowradius/2)$) circle (\shadowradius);
+		\shade[outercolor,inner color=innercolor,outer color=outercolor] ($(#1.north east)+(\shadowshift)+(-\shadowradius/2,-\shadowradius/2)$) circle (\shadowradius);
+		\shade[top color=innercolor,bottom color=outercolor] ($(#1.south west)+(\shadowshift)+(\shadowradius/2,-\shadowradius/2)$) rectangle ($(#1.south east)+(\shadowshift)+(-\shadowradius/2,\shadowradius/2)$);
+		\shade[left color=innercolor,right color=outercolor] ($(#1.south east)+(\shadowshift)+(-\shadowradius/2,\shadowradius/2)$) rectangle ($(#1.north east)+(\shadowshift)+(\shadowradius/2,-\shadowradius/2)$);
+		\shade[bottom color=innercolor,top color=outercolor] ($(#1.north west)+(\shadowshift)+(\shadowradius/2,-\shadowradius/2)$) rectangle ($(#1.north east)+(\shadowshift)+(-\shadowradius/2,\shadowradius/2)$);
+		\shade[outercolor,right color=innercolor,left color=outercolor] ($(#1.south west)+(\shadowshift)+(-\shadowradius/2,\shadowradius/2)$) rectangle ($(#1.north west)+(\shadowshift)+(\shadowradius/2,-\shadowradius/2)$);
+		\filldraw ($(#1.south west)+(\shadowshift)+(\shadowradius/2,\shadowradius/2)$) rectangle ($(#1.north east)+(\shadowshift)-(\shadowradius/2,\shadowradius/2)$);
+	\end{pgfonlayer}
+}
+
+% create a shadow layer, so that we don't need to worry about overdrawing other things
+\pgfdeclarelayer{shadow} 
+\pgfsetlayers{shadow,main}
+
+
+\newcommand\shadowimage[2][]{%
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[#1]{#2}};
+		\drawshadow{image}
+\end{tikzpicture}}
+
+
+% --------------------------
 % --- Document variables ---
 % --------------------------
 \newcommand*{\thesistitle}[1]{\def\ttitle{#1}}
-\thesistitle{Veranschaulichung verschiedener Lichtsteuerprotokolle}
+\thesistitle{Veranschaulichung digitaler Steuerprotokolle in der Lichttechnik}
 \def\authorname{Klaus, Conrad Yosemite}
-\def\submissionDate{06. April 2023}
+\def\submissionDate{25. April 2023}
    
 % ------------------------------
 % --- Custom chapter/section headder --- 
@@ -287,6 +326,9 @@ pdfstartview={FitV},unicode,breaklinks=true]{hyperref}
 	\refstepcounter{dummy}
 	\addcontentsline{toc}{chapter}{#1}}
 \renewcommand{\contentsname}{Inhaltsverzeichnis}
+\renewcommand\bibname{Literaturverzeichnis}
+\renewcommand{\listfigurename}{Abbildungsverzeichnis}
+\renewcommand{\listtablename}{Tabellenverzeichnis}
 
 % custom table of content spacing
 \setlength\cftparskip{-7pt}
@@ -405,3 +447,6 @@ pdfstartview={FitV},unicode,breaklinks=true]{hyperref}
 	\btypeout{\bibname}
 	\@mainmatterfalse}
 \endinput
+
+
+

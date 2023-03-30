@@ -17,9 +17,13 @@
 #include "libLogicAnalyzer.h"
 
 GSList *device_scan(struct sr_context *sr_ctx);
-int set_dev_options(struct sr_dev_inst *sdi);
+int set_dev_options(struct sr_dev_inst *sdi, uint64_t sampleRate);
 
-int device_init(struct sr_dev_inst **mySaleaeLogic, struct sr_context *sr_ctx) {
+int device_init(
+        struct sr_dev_inst **mySaleaeLogic,
+        struct sr_context *sr_ctx,
+        uint64_t sampleRate
+) {
     GSList *devices = device_scan(sr_ctx);
     if (!devices) {
         g_critical("No devices found, try reconnecting the logic analyzer");
@@ -61,13 +65,14 @@ int device_init(struct sr_dev_inst **mySaleaeLogic, struct sr_context *sr_ctx) {
         return -1;
     }
 
-    if (set_dev_options(*mySaleaeLogic) != SR_OK) {
+    if (set_dev_options(*mySaleaeLogic, sampleRate) != SR_OK) {
         g_critical("logic analyzer: Error 300 occurred, exiting");
         return -1;
     }
 
+    uint64_t limitSamples = LIMIT_SAMPLES(sampleRate);
     if (!(sr_dev_config_capabilities_list(*mySaleaeLogic, NULL, SR_CONF_LIMIT_SAMPLES) & SR_CONF_SET)
-        || sr_config_set(*mySaleaeLogic, NULL, SR_CONF_LIMIT_SAMPLES, g_variant_new_uint64(LIMIT_SAMPLES)) != SR_OK)
+        || sr_config_set(*mySaleaeLogic, NULL, SR_CONF_LIMIT_SAMPLES, g_variant_new_uint64(limitSamples)) != SR_OK)
     {
         g_critical("Failed to configure sample limit.");
         return -1;
@@ -100,7 +105,7 @@ GSList *device_scan(struct sr_context *sr_ctx)
 	return devices;
 }
 
-int set_dev_options(struct sr_dev_inst *sdi)
+int set_dev_options(struct sr_dev_inst *sdi, uint64_t sampleRate)
 {
     struct sr_config src;
     const struct sr_key_info *srci;
@@ -111,7 +116,7 @@ int set_dev_options(struct sr_dev_inst *sdi)
         return SR_ERR;
     }
     src.key = srci->key;
-    src.data = g_variant_new_uint64(SAMPLE_RATE);
+    src.data = g_variant_new_uint64(sampleRate);
 
     if (!(sr_dev_config_capabilities_list(sdi, NULL, src.key) & SR_CONF_SET)){
         g_critical("Unknown key: %s : %s.", "samplerate", sr_strerror(SR_ERR_NA));

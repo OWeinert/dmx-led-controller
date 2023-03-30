@@ -1,60 +1,9 @@
 % Chapter Template
 
-
-\chapter{Einleitung: Zielstellung, Aufbau der Arbeit (1 Seite)}
-
-
-Introduction layout:
-
-- DMX etabliertes Protokoll mit vielen Lösungen.
-Funktionieren aber auf der Anwendungsebene.
-
-- Genaue Funktionsweise wird nicht erklärt, Nur übertragende Informationen angezeigt
-
--
-
-
-\label{Chapter2} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterX}
-
-\lhead{Kapitel 2: \emph{Protokolle Lichttechnik}}
-
+\input{Chapters/Intro}
+%TODO fill also for the rest
 \input{Chapters/TheorieLichttechnikProtokolle}
-
-
-\chapter{Technischer Hintergrund (5 Seiten)}
-\section{DMX}
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=\linewidth]{Pictures/DmxTimingFrame}
-	\caption{Zeitdiagramm \cite[p.17]{DMX512-Protocol-Standard}}
-	\label{fig:DmxTimingFrame}
-\end{figure}
-
-DMX Platine: Vorbild
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.5\linewidth]{Pictures/DmxIsolation}
-	\caption{Zeitdiagramm \cite[p.22]{DMX512-Protocol-Standard}}
-	\label{fig:DmxIsolation}
-\end{figure}
-
-
-\section{LED Matrix}
-\section{SPI}
-\section{OLA}
-\section{UART}
-
-\chapter{Implementierung (15 Seiten)}
-\section{RPI Setup}
-\section{OLA Setup}
-\section{Coding environment setup (install dependencies)}
-\section{Gehäuse Aufbau}
-
-\chapter{Validierung: Studie (10 Seiten)}
-\section{Aufbau}
-\section{Durchführung}
-\section{Ergebnis}
-
-\chapter{Fazit (2 Seiten)}
+\input{Chapters/TechnischeDetailsDMX}
+\input{Chapters/Hardware}
+\input{Chapters/Software}
+\input{Chapters/Conclusion}

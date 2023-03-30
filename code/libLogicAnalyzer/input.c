@@ -17,10 +17,10 @@
 #include "libLogicAnalyzer.h"
 
 
-void load_input_file(struct sr_context *sr_ctx, struct srd_session *srd_session)
+void load_input_file(struct sr_context *sr_ctx, struct srd_session *srd_session, uint64_t sampleRate)
 {
     struct sr_session *session;
-    if (sr_session_load(sr_ctx, "assets/sigrok_sessions/colored_spacecraft.sr", &session) == SR_OK) {
+    if (sr_session_load(sr_ctx, "assets/sigrok_sessions/colored_spacecraft_24MHz.sr", &session) == SR_OK) {
         /* sigrok session file */
         GSList *devices;
         if (sr_session_dev_list(session, &devices) != SR_OK || !devices || !devices->data) {
@@ -36,6 +36,7 @@ void load_input_file(struct sr_context *sr_ctx, struct srd_session *srd_session)
         struct cb_data cb_data = {
                 srd_session,
                 session,
+                LIMIT_SAMPLES(sampleRate),
         };
 
         sr_session_datafeed_callback_add(session,sr_session_callback, &cb_data);

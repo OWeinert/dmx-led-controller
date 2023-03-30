@@ -18,9 +18,12 @@
 #include <stdbool.h>
 #include "libLogicAnalyzer.h"
 
-static void logger(const gchar *log_domain, GLogLevelFlags log_level,
-		   const gchar *message, gpointer cb_data)
-{
+static void logger(
+        const gchar *log_domain,
+        GLogLevelFlags log_level,
+        const gchar *message,
+        gpointer cb_data
+) {
 	(void)log_domain;
     gint* opt_loglevel = (gint*) cb_data;
 
@@ -37,7 +40,7 @@ static void logger(const gchar *log_domain, GLogLevelFlags log_level,
 		exit(1);
 }
 
-__attribute__((unused)) int runAnalyzer(struct CallbackData* callbackData, bool fromDevice)
+__attribute__((unused)) int runAnalyzer(struct CallbackData* callbackData, bool fromDevice, uint64_t sampleRate)
 {
     gint opt_loglevel = SR_LOG_WARN; /* Show errors+warnings by default. */
 	g_log_set_default_handler(logger, &opt_loglevel);
@@ -56,21 +59,21 @@ __attribute__((unused)) int runAnalyzer(struct CallbackData* callbackData, bool 
     }
     struct sr_dev_inst *mySaleaeLogic = NULL;
 
-    if (fromDevice && device_init(&mySaleaeLogic, sr_ctx) != SR_OK) {
+    if (fromDevice && device_init(&mySaleaeLogic, sr_ctx, sampleRate) != SR_OK) {
         g_critical("logic analyzer: Error 102 occurred, exiting");
         goto done;
     }
 
     struct srd_session *srd_session = NULL;
     struct srd_decoder_inst *decoder_instant = NULL;
-    if (sigrok_decode_session_start(&srd_session, callbackData, opt_loglevel, &decoder_instant, mySaleaeLogic) != SR_OK) {
+    if (sigrok_decode_session_start(&srd_session, callbackData, opt_loglevel, &decoder_instant, mySaleaeLogic, sampleRate) != SR_OK) {
         g_critical("logic analyzer: Error 103 occurred, exiting");
         goto done;
     }
     if (fromDevice) {
-        run_session(mySaleaeLogic, sr_ctx, srd_session);
+        run_session(mySaleaeLogic, sr_ctx, srd_session, sampleRate);
     } else {
-        load_input_file(sr_ctx, srd_session);
+        load_input_file(sr_ctx, srd_session, sampleRate);
     }
 
     g_mutex_lock (&decoder_instant->data_mutex);

@@ -20,6 +20,7 @@
 void sr_session_callback(const struct sr_dev_inst *sdi, const struct sr_datafeed_packet *packet, void *cb_data)
 {
 	static uint64_t received_samples = 0;
+    struct cb_data *callback = (struct cb_data *) cb_data;
 	switch (packet->type) {
 	case SR_DF_HEADER: {
 		g_debug("logic analyzer: Received SR_DF_HEADER.");
@@ -31,22 +32,22 @@ void sr_session_callback(const struct sr_dev_inst *sdi, const struct sr_datafeed
 		g_message("logic analyzer: Received SR_DF_LOGIC (%"PRIu64" bytes, unitsize = %d).", logic->length, logic->unitsize);
 		if (logic->length == 0)
 			break;
-		if (received_samples >= LIMIT_SAMPLES) {
+		if (received_samples >= callback->limitSamples) {
             g_critical("receiving to many samples");
             break;
         }
         uint64_t end_sample = received_samples + (logic->length / logic->unitsize);
-        struct srd_session *srd_sess = ((struct cb_data *) cb_data)->srd_session;
+        struct srd_session *srd_sess = callback->srd_session;
         if (srd_session_send(srd_sess, received_samples, end_sample,
                              logic->data, logic->length, logic->unitsize) != SRD_OK) {
-                    sr_session_stop(((struct cb_data *) cb_data)->sr_session);
+                    sr_session_stop(callback->sr_session);
         }
         received_samples = end_sample;
 		break;
     }
     case SR_DF_END:
         g_debug("logic analyzer: Received SR_DF_END.");
-        if (received_samples != LIMIT_SAMPLES)
+        if (received_samples != callback->limitSamples)
             g_warning("Device only sent %" PRIu64 " samples.", received_samples);
         break;
 
@@ -65,13 +66,18 @@ void on_sr_session_stopped(void *data) {
     g_main_loop_quit(loop);
 }
 
-void run_session(struct sr_dev_inst *mySaleaeLogic, struct sr_context *sr_ctx, struct srd_session *srd_session)
-{
+void run_session(
+        struct sr_dev_inst *mySaleaeLogic,
+        struct sr_context *sr_ctx,
+        struct srd_session *srd_session,
+        uint64_t sampleRate
+) {
     struct sr_session *sr_session;
 	sr_session_new(sr_ctx, &sr_session);
 	struct cb_data cb_data = {
             srd_session,
             sr_session,
+            LIMIT_SAMPLES(sampleRate),
     };
     sr_session_datafeed_callback_add(sr_session, sr_session_callback, &cb_data);
 
