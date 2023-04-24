@@ -49,12 +49,12 @@ Ein gepuffertes Signal für den Bildschirm ist wünschenswert, um ein mögliches
 
 \section{Platine DMX Breakout}
 
-Die DMX Spezifikation empfiehlt eine galvanische Trennung vom DMX Bus und dem Rest der Platine\cite[S.22]{DMX512-Protocol-Standard}. Die DMX Kabel können mehrere 100 Meter lange Signale weiterleiten. Elektrostatische Aufladungen, können die maximale spezifizierten Spannungen übersteigen. Eine elektronische Isolierung \ref{fig:DmxIsolation}, des Busses zu anderen Komponenten ist vorteilhaft, um mögliche Schäden zu minimieren.
+Die DMX Spezifikation empfiehlt eine galvanische (elektrische) Trennung vom DMX Bus und dem Rest der Platine\cite[S.22]{DMX512-Protocol-Standard}. Die DMX Kabel können mehrere 100 Meter lange Signale weiterleiten. Elektrostatische Aufladungen, können die maximale spezifizierten Spannungen übersteigen. Eine elektronische Isolierung \ref{fig:DmxIsolation}, des Busses zu anderen Komponenten ist vorteilhaft, um mögliche Schäden zu minimieren.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.5\linewidth]{Pictures/DmxIsolation}
-	\caption{Zeitdiagramm \cite[S.22]{DMX512-Protocol-Standard}}
+	\caption{DMX elektrische Isolierung \cite[S.22]{DMX512-Protocol-Standard}}
 	\label{fig:DmxIsolation}
 \end{figure}
 
@@ -113,15 +113,15 @@ Die Signalverarbeitung wird mithilfe eines handelsüblichen Logikanalysators \re
 
 Die Vorgaben, für das Projekt, sehen vor, dass nicht nur der logische Inhalt des DMX Datenpakets entschlüsselt wird, sondern auch die exakten Zeitabstände zwischen den Signalflanken ausgelesen werden.
 
-Neben der Verwendung des Logikanalysators wurden auch noch andere Optionen betrachtet: Die CPU könnte genutzt werden, um das Signal schnell hintereinander auszulesen und so das Signal aufzunehmen. Das verwendete Linux-Betriebssystem ist jedoch kein Echtzeitbetriebssystem. Das bedeutet, dass nicht garantiert werden kann, dass das Signal kontinuierlich ausgelesen wird, da das Betriebssystem zu jedem Zeitpunkt ein anderes Programm, die CPU zuweisen kann. Eine Möglichkeit, um dies zu umgehen, wäre es den Prozess über das Betriebssystem auf einem Kern zu fesseln. Tatsächlich macht dies der Treiber für die Bildschirmsteuerung bereits. Noch einen weiteren Kern nur für das Auslesen, des Signals zu blockieren, würde die Geschwindigkeit des Raspberry Pi stark verlangsamen. Der Raspberry Pi 4 hat insgesamt 4 Kerne. Die Hälfte der CPU Kerne zu blockieren, ist sehr Ressourcen verschwenderisch.
+Neben der Verwendung des Logikanalysators wurden auch noch andere Optionen betrachtet: Die CPU könnte genutzt werden, um das Signal oft auszulesen und so das Signal aufzunehmen. Das verwendete Linux Betriebssystem ist jedoch kein Echtzeitbetriebssystem. Das bedeutet, dass nicht garantiert werden kann, dass das Signal kontinuierlich ausgelesen wird, da das Betriebssystem zu jedem Zeitpunkt ein anderes Programm, die CPU Zeit zuweisen kann. Eine Möglichkeit, um dies zu umgehen, wäre es den Prozess über das Betriebssystem auf einem Kern zu fesseln. Tatsächlich macht dies der Treiber für die Bildschirmsteuerung bereits. Noch einen weiteren Kern nur für das Auslesen, des Signals zu blockieren, würde die Geschwindigkeit des Raspberry Pi stark verlangsamen. Der Raspberry Pi 4 hat insgesamt 4 Kerne. Die Hälfte der CPU Kerne zu blockieren, ist sehr Ressourcen verschwenderisch.
 
-Eine weitere Überlegung war es den Raspberry Pi Pico zu verwenden: Der Raspberry Pi Pico, ist im Gegensatz zum Raspberry Pi 4 ein Mikrocontroller. Dieser besitzt eine programmierbare Ein- und Ausgangs Peripherie (\emph{Programmalbe Input Output - PIO}). Diese Peripherie kann genutzt werden, um Signale per Hardware in Echtzeit zu verarbeiten. Eine Möglichkeit wäre es, die Bits in den RAM zu schreiben, und diese dann im Programm auszulesen \cite[S. 43]{RPiPicoPIO}. Auf dem Pico läuft jedoch kein richtiges Betriebsystem, da er ein Mikrocontroller ist. Daher würden viele Bibliotheken, wie z.B. der Displaytreiber, der Signaldecoder und viele Rust Bibliotheken nicht mehr funktionieren. Daher ist auch diese Option nicht geeignet.
+Eine weitere Überlegung war es den Raspberry Pi Pico zu verwenden: Der Raspberry Pi Pico, ist im Gegensatz zum Raspberry Pi 4 ein Mikrocontroller. Dieser besitzt eine programmierbare Ein- und Ausgangs Peripherie (\emph{Programmalbe Input Output - PIO}). Diese Peripherie kann genutzt werden, um Signale per Hardware in Echtzeit zu verarbeiten. Eine Möglichkeit wäre es, die Bits in den RAM zu schreiben, und diese dann im Programm auszulesen \cite[S. 43]{RPiPicoPIO}. Auf dem Pico läuft jedoch kein richtiges Betriebsystem, da er ein Mikrocontroller ist. Daher würden viele Bibliotheken, wie z.B. der Bildschirmtreiber, der Signaldecoder und viele Rust Bibliotheken nicht mehr funktionieren. Daher ist auch diese Option nicht geeignet.
 
-Auch würde überprüft, ob die UART Schnittstelle des Raspberry Pi 4 verwendet werden kann, weil das DMX Signal im Wesentlichen aus einem UART Signal besteht. Für die Markierung des Anfanges eines DMX Paketes wird, das UART Protokoll jedoch abgewandelt, um ein \emph{Break} und ein \emph{MarkAfterBreak} Signal einzubinden. Der Raspberry Pi kommt leider nicht mit dieser Abwandlung zurecht\cite[S.20]{RaspberryPiDmxInterface}. Die UART Schnittstelle, bietet auch keine Möglichkeit, um den zeitlichen Ablauf des Signals nachzuvollziehen. Die UART Schnittstelle kann deswegen auch nicht für die Signalabtastung verwendet werden.
+Auch würde überprüft, ob die UART Schnittstelle des Raspberry Pi 4 verwendet werden kann, weil das DMX Signal im Wesentlichen aus einem UART Signal besteht. Für die Markierung des Anfanges eines DMX Paketes wird, das UART Protokoll jedoch abgewandelt, um ein Pause- und ein \emph{MarkAfterBreak} Signal einzubinden. Der Raspberry Pi kommt leider nicht mit dieser Abwandlung zurecht\cite[S.20]{RaspberryPiDmxInterface}. Die UART Schnittstelle, bietet auch keine Möglichkeit, um den zeitlichen Ablauf des Signals nachzuvollziehen. Die UART Schnittstelle kann deswegen auch nicht für die Signalabtastung verwendet werden.
 
-Eine weitere Möglichkeit, ist die SPI Schnittstelle des Raspberry Pi auszunutzen. Dies wurde für diese Arbeit auch getestet. Das Signal konnte mit dem Raspberry Pi 1 mit bis zu 2 MHz aufgenommen werden \cite{RaspberryPiDmxInterface}[30].
+Eine weitere Möglichkeit, ist die SPI (\emph{Serial Peripheral Interface}) Schnittstelle des Raspberry Pi. Das Signal kann mit dem Raspberry Pi 1 mit bis zu 2 MHz aufgenommen werden \cite{RaspberryPiDmxInterface}[30].
 
-Diese Option ließ aber einige Fragen auf. Das DMX Signal konnte oft nicht komplett aufgenommen. Möchte man immer das komplette DMX Signal aufnehmen, ist nur noch eine Abtastrate von 1 MHz möglich. Der Raspberry Pi 4 kann insgesamt 65536 ($2^{16}$) Abtastungen aufnehmen. Ein komplettes DMX Signal ist min. 22,624 ms lang\cite{DMXWikiTiming}. Wenn wir immer ein komplettes Signal aufnehmen wollen, müssen wir $  \SI{22.624}{\ms}
+Diese Option lässt aber einige Fragen auf. Das DMX Signal kann oft nicht komplett aufgenommen werden. Möchte man immer das komplette DMX Signal aufnehmen, ist nur noch eine Abtastrate von 1 MHz möglich. Der Raspberry Pi 4 kann insgesamt 65536 ($2^{16}$) Abtastungen aufnehmen. Ein komplettes DMX Signal ist min. 22,624 ms lang\cite{DMXWikiTiming}. Wenn wir immer ein komplettes Signal aufnehmen wollen, müssen wir $  \SI{22.624}{\ms}
  * 2 \approx \SI{50}{\ms}$ aufnehmen.
 
 
@@ -170,7 +170,7 @@ Die gerenderte Seiten- und Topansicht \ref{DmxCaseRender} zeigt den Aufbau des G
 
 Die LED Matrix befindet sich in der Seitenansicht \ref{DmxCaseSideViewRender} unter dem Gehäuse. Die LED Matrix kann direkt an das Gehäuse geschraubt werden, um einen nahtlosen Übergang zwischen Bildschirm und Gehäuse zu erzeugen. Die exakten CAD-Zeichnungen \cite[S.1]{LedMatrixCadDrawings} der LED Matrix haben dies ermöglicht.
 
-Auch der Raspberry Pi kann direkt ins Gehäuse verschraubt werden. Der Raspberry Pi schwebt so in der Aussparung der LED Matrix. Das Gehäuse ist dadurch etwas schmaler. Die DMX Platine kann direkt in der Seitenwand verschraubt werden. Alle Datensignale und auch die Steckverbindungen für die Stromversorgung, befinden sich auf einer Seite, um den Anschluss des DMX Analysators möglichst einfach zu gestalten. Neben dem Stromanschluss befinden sich auf der Seitenwand auch die benötigte Spannung und Stromstärke sowie eine Beschreibung der Polarität des Stromanschlusses. Das Gehäuse ist breit genug, damit es ohne externe Stützen stabil stehen kann. 
+Auch der Raspberry Pi kann direkt ins Gehäuse verschraubt werden. Der Raspberry Pi schwebt so in der Aussparung der LED Matrix. Das Gehäuse ist dadurch etwas flacher. Die DMX Platine kann direkt in der Seitenwand verschraubt werden. Alle Datensignale und auch die Steckverbindungen für die Stromversorgung, befinden sich auf einer Seite, um den Anschluss des DMX Analysators möglichst einfach zu halten. Neben dem Stromanschluss befinden sich auf der Seitenwand auch die benötigte Spannung und Stromstärke sowie eine Beschreibung der Polarität des Stromanschlusses. Das Gehäuse ist breit genug, damit es ohne externe Stützen stabil stehen kann. 
 
 Die CAD-Zeichnungen beinhaltet nicht die Verkabelung der einzelnen Komponenten. Die Abbildung \ref{fig:DmxCaseWiring} zeigt den Strom- und Datenkabelaufbau.
 
@@ -197,7 +197,7 @@ Die CAD-Zeichnungen beinhaltet nicht die Verkabelung der einzelnen Komponenten. 
 	\label{fig:DmxCaseWiring}
 \end{figure}
 
-Für die Modellierung wurde Fusion360 benutzt. Fusion 360 verwendet einen parametrische Modellierungsansatz. Die Modellierung ist dabei abhängig von vorher definierten Merkmalen und Einschränkungen. Dabei können Skizzen mithilfe mathematischer Beziehungen erstellt werden und ein 3 dimensionales Model aufgebaut werden. Der Vorteil der parametrischen Modellierung ist, dass definierte Merkmale (wie z.B. die Wanddicke), im späteren Verlauf verändert werden können, und alle darauf aufbauenden Merkmale neu errechnet werden. 
+Für die Modellierung wurde Fusion360 benutzt. Fusion 360 verwendet einen parametrische Modellierungsansatz. Die Modellierung ist dabei von vorher definierten Merkmalen und Einschränkungen abhängig. Dabei können Skizzen mithilfe mathematischer Beziehungen erstellt werden und ein 3 dimensionales Model aufgebaut werden. Der Vorteil der parametrischen Modellierung ist, dass definierte Merkmale (wie z.B. die Wanddicke), im späteren Verlauf verändert werden können, und alle darauf aufbauenden Merkmale neu errechnet werden. 
 
 Das Gehäuse wird von einer verschraubbaren Abdeckung \ref{DmxCaseLidRender} von äußerlichen Einflüssen geschützt. Das zusammengesetzte Projekt mit der LED Matrix und der DMX Gehäuse Abdeckung ist der Abbildung \ref{fig:DmxCase} zu sehen.
 

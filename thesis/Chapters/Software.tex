@@ -1,7 +1,7 @@
 \chapter{Software}
 \lhead{Kapitel 5: \emph{Software}}
 
-Die Hardware alleine, reicht nicht aus, um den Bildschirm mit den analysierten DMX Paketen zu füttern. Die Hardware gibt uns nur die rohen aufgenommen Daten und eine physische Verbindung zwischen Bildschirm und dem Raspberry Pi. In dem Projekt wurde ein Programm geschrieben, um beide Elemente zu verbinden. Die Bachelorarbeit beschreibt auch, die Motivation, hinter den Entscheidungen der verwendeten Softwarelösungen. Die Auswahl der verwendeten Technologien wird im Folgenden beschrieben.
+Die Hardware alleine reicht nicht aus, um den Bildschirm mit den analysierten DMX Paketen zu füttern. Die Hardware gibt uns nur die rohen aufgenommen Daten und eine physische Verbindung zwischen Bildschirm und dem Raspberry Pi. In dem Projekt wurde ein Programm geschrieben, um beide Elemente zu verbinden. Die Bachelorarbeit beschreibt auch, die Motivation, hinter den Entscheidungen der verwendeten Softwarelösungen. Die Auswahl der verwendeten Technologien wird im Folgenden beschrieben.
 
 \section{Verwendete Technologien}
 Als Basis wird das Linux OS für den Raspberry Pi verwendet: Raspberry Pi OS.
@@ -10,23 +10,12 @@ Ein aufgenommenes DMX Paket mit einer Abtastrate von 24Mhz umfässt 1.2 Millione
 
 \[\SI{50}{\ms} \cdot \SI{24}{\cdot 10^6 \frac{Abtastungen}{s}} \approx \SI{1.2}{\cdot 10^6 Abtastungen}\]
 
-Die Verarbeitung des DMX Signales muss daher schnell erfolgen. Auch die Bildschirmsteuerung muss möglichst schnell laufen, damit der Bildschirm auch Animationen flüssig darstellen kann. Außerdem muss das Programm direkt mit dem USB Logikanalysator kommunizieren. Die verwendete Programmiersprache muss also schnell sein, direkt mit Hardware umgehen können und direkt mit dem Betriebssystem kommunizieren können.
+Die Verarbeitung des DMX Signales muss daher schnell erfolgen. Auch die Bildschirmsteuerung muss möglichst schnell laufen, damit der Bildschirm auch Animationen flüssig darstellen kann. Außerdem muss das Programm direkt mit dem USB Logikanalysator kommunizieren. Die verwendete Programmiersprache muss also schnell sein und direkt mit der Hardware und dem Betriebssystem kommunizieren können.
 
 Die Programmiersprache sollte daher eine kompilierte Sprache und keine interpretierte Sprache sein. Bei einer kompilierten Sprache wird der Quellcode bereits vor dem Ausführen in Maschinensprache übersetzt. Eine interpretierte Sprache interpretiert den Quellcode erst während der Ausführung und ist daher generell langsamer.
 
 Programme mit diesen Anforderungen wurden früher oft in C, C++ oder vergleichbaren Programmiersprachen geschrieben. Seit einigen Jahren gewinnt eine neue Programmiersprache deutlich an Popularität: Rust. Für dieses Projekt, ist der Großteil der Logik in Rust geschrieben.
 Für die Kommunikation mit dem USB Logikanalysator, die Analysierung des DMX Paketes und die Ansteuerung der LED Matrix werden an bereits existierenden Lösungen angeknüpft. Diese Interaktion kann mithilfe von externen Bibliotheken umgesetzt werden.
-
-\section{Vergleich: Rust vs C}
-Rust revolutinert die Memory managnemnt. In der Vergangenheit wurde der Arbeitspeicher entweder direkt vom Programmierier mit malloc (in c) reserviert und freigeben oder von einem Garbage collector (z.B. Java) gemanaged. Garbage Collectors sind langsamer und kümmern sich während der Laufzeit um den Speicher. Der Programmfluss eines Programmes kann also während der Laufzeit unterbrochen werden, um den Speicher zu optimieren. Der Programmierer hat darauf keinen Einfluss. Dies ist für Zeitlich wichtige Abläufe ein Problem. In C hat der Progammierbar volle Kontrolle über den Speicher. Jedoch ist Speichermanagnent sehr Fehler anfällig. Und führt oft zu Sicherheitslücken, nicht wieder freigeebner Speicher und zu Programmabstüzen von derefernizerten dangling Pointers.
-
-Rust, ist genau wie C sehr schnell, löst jedoch das Speicherproblem auf einer sehr elegante Art und Weise. Rust führt die Idee von Ownership und Borrowing ein. Der benjutzte Speicher wird dabei immer von genau einer Variable besitzt. Fällt diese Variable out of Scope, so kann der Speicher ohne Probleme wieder frei gegeben werden. Um den Progamierwer mehr flexibilait zu geben, können der Speicher einer Variable auch an eine andere ausgleihen werden, oder der Besitzt weitergegeben werden. Die Regeln sind so definiert, dass der Speicher zu jeden Zeitpunkt auf genau eine Variable zurück geführt werden kann. Somit kann Rust bereits zur Kompilezeit den Speicherverbrauch mit einbeziehen und Fehler bereits zur Kompiletime erkennen. Segmentation Faults können so in reihnem Rust nicht mehr auftreten.
-
-Möchte der Progammeirer in Rust, aber z.B. direkt mit der Hardware kommunizieren und den Status der Hardware auslesen, kann der Kompiler nicht zur Kompilezeit, also vor der Laufzeit voraussagen, welchen Zustand die Hardware haben wird. Für dises und ähnliche Scenairen unterstüzt Rust ein unsafe Feature. Ist Code inerhalb eines unsafe blocks, werden viele Kompilerchecks deaktivert, um den Progammier die benötigte flexiblität zu geben. In Rust sind diese Blöcke expliztit gekennzeichtent. Dies erleichtert das Debugging bei einer Fehlersuche. In C ist alles unsicher.
-
-Rust bietet aber noch viele weitere Vorteile im Vergleich zu C. In Rust ist die einbindung von externen Libaries deutlich leichter als in C. Auch unterstüzt Rust eine vielzahl von Programmierparadigmen wie z.B. funktionale Programmierung, die in C nur mit Hacks umsetzbar sind. Rust ist Typsicher. C nicht. Das führt dazu das Fehler in Rust bereits zur Kompilezeit (als vor der Programausführung) endeckt werden. Bei C entstehen keine Fehler zur Compilezeit. Jedoch führen diese Fehler entweder zu undefiereten Verhalten des Programms bzw. eines Programmabsturz.
-
-Es extieren viele alte Projekt die in C geschrieben sind. Um den Wechsel von C auf Rust zu vereinfachen, bietet Rust ein einfaches Interface an, um C code innerhalb von Rust und anderherum auszuführen. So kann c legacy code, trotzdem mit Rust verwendet werden.
 
 \section{Bildschirm Treiber}
 
@@ -38,24 +27,24 @@ umgesetzt. Dadurch muss nicht jeder Pixel einzeln gesetzt werden. Es können ver
 
 
 \section{Logikanalysator}
-Für die Kommunikation mit dem Logikanalysator wird die Bibliothek \emph{sigrok} \cite{githubLibsigrok} verwendet. Die Bibliothek ist in C geschrieben. Leider gab es keine geeignete Rust Schnittstelle, um mit dieser Bibliothek zu interagieren. Daher habe ich meine eigene C Bibliothek geschrieben, welche die \emph{sigrok} C Bibliothek verwendet, um mit dem USB Logikanalysator zu kommunizieren. Für meine eigene C Bibliothek habe ich dann ein Interface aufgebaut, um sie aus meinem Rust Quellcode heraus aufzurufen.
+Für die Kommunikation mit dem Logikanalysator wird die Bibliothek \emph{sigrok} \cite{githubLibsigrok} verwendet. Die Bibliothek ist in C geschrieben. Leider gab es keine geeignete Rust Schnittstelle, um mit dieser Bibliothek zu interagieren. Daher habe ich meine eigene C Bibliothek geschrieben, welche die \emph{sigrok} C Bibliothek einbindet, um mit dem USB Logikanalysator zu kommunizieren. Für meine eigene C Bibliothek habe ich dann ein Rust Interface aufgebaut, um sie aus meinem Rust Quellcode heraus aufzurufen.
 
-Die empfangenen Daten vom USB Logikanalysator müssen jedoch noch verarbeitet werden. Dafür wird eine weitere Bibliothek verwendet: \emph{ibsigrokDecode}\cite{githubLibsigrokDecode}.
-Diese Bibliothek wurde nicht für Echtzeit Analysen ausgelegt. Die Bibliothek ist in Python geschrieben. Python ist eine interpretierte Sprache und daher langsamer. Bei der Anzahl der Abtastpunkte, die bei 24 Mhz aufgenommen werden, kommt der Raspberry Pi an seine Grenzen. Der Raspberry Pi braucht ungefähr 4 Sekunden um ein DMX Paket zu analysieren.
+Die empfangenen Daten vom USB Logikanalysator müssen jedoch noch verarbeitet werden. Dafür wird eine weitere Bibliothek verwendet: \emph{libsigrokDecode}\cite{githubLibsigrokDecode}.
+Diese Bibliothek wurde nicht für Echtzeit Analysen ausgelegt. Die Bibliothek ist in Python geschrieben. Python ist eine interpretierte Sprache und daher langsamer. Bei der Anzahl der Abtastpunkte, die bei 24 Mhz aufgenommen werden, kommt der Raspberry Pi an seine Grenzen. Der Raspberry Pi braucht ungefähr 3 Sekunden um ein DMX Paket zu analysieren.
 
-Mein geschriebenes Programm unterstützt verschiedene Abtastraten. Ist eine schnelleres und reaktives Verhalten gewünscht, und ungenauere Zeitmessungen in Ordnung, kann die Samplingrate bis zu 2 MHz problemlos heruntergestellt werden.
+Mein geschriebenes Programm unterstützt verschiedene Abtastraten. Ist ein schnelleres und reaktives Verhalten gewünscht, und ungenauere Zeitmessungen kein Problem, kann die Samplingrate bis zu 2 MHz herunter gestellt werden.
 
 % TODO bit banging tests?
 %Auch ist der DMX Decoder nicht der beste.
 
 
-\section{Entwicklung mithilfe Simulation}
-Der Raspberry Pi ist im Vergleich zu einem normalen Computer relativ langsam. Das komplette Programm neu auf dem Pi zu kompilieren braucht etwa 1-2 Minuten. Beim Updaten von kleinen Quellcode-Veränderungen benötigt der Pi einige Sekunden. Der Entwicklungsprozess wird dadurch erheblich verlangsamt. Es wurden mehrere Ansätze getestet, um den Entwicklungsprozess zu vereinfachen.
+\section{Entwicklung mithilfe von Simulation}
+Der Raspberry Pi ist im Vergleich zu einem normalen Computer relativ langsam. Das komplette Programm neu auf dem Pi zu kompilieren braucht etwa 3-4 Minuten. Beim Updaten von kleinen Quellcodeänderungen benötigt der Pi einige Sekunden. Ein handelsüblicher Computer \footnote{getestet mit einem M1 MacBook Pro} benötigt ca. 30 Sekunden, um das komplette Programm zu kompilieren und ca. 1 Sekunde bei kleinen Quellcode-Änderungen. Der Entwicklungsprozess wird dadurch erheblich verlangsamt. Es wurden mehrere Ansätze getestet, um den Entwicklungsprozess zu vereinfachen.
 
-Zunächst war die Überlegung das Programm auf einen normalen Computer zu kompileren und nur das fertige Programm auf den Raspberry Pi zu kopieren und dort auszuführen. Dieses Verfahren nennt sich quer kompilieren (\emph{cross compile}). Dafür ist es erforderlich eine komplette Werkzeugkette (\emph{toolchain}) aufzubauen. Diese Werkzeugkette muss für den verwendeten Raspberry Pi maßgeschneidert werden. Alle Bibliotheken müssen ebenfalls über diese Werkzeugkette kompiliert werden. Am Anfang des Projektes, gab es noch wenige Abhängigkeiten. Die Abhängigkeiten wurden jedoch schnell zu viele, um Werkzeugkette mit geringen Aufwand zu erhalten.
+Zunächst war die Überlegung das Programm auf einen normalen Computer zu kompileren und nur das fertige Programm auf den Raspberry Pi zu kopieren und dort auszuführen. Dieses Verfahren nennt sich quer kompilieren (\emph{cross compile}). Dafür ist es erforderlich eine komplette Werkzeugkette (\emph{toolchain}) aufzubauen. Diese Werkzeugkette muss für den verwendeten Raspberry Pi maßgeschneidert werden. Alle Bibliotheken müssen ebenfalls über diese Werkzeugkette kompiliert werden. Am Anfang des Projektes, gab es noch wenige Abhängigkeiten. Die Abhängigkeiten wurden jedoch schnell zu komplex, um die Werkzeugkette mit geringem Aufwand aufrechtzuerhalten.
 
-Es wurde auch probiert Docker zu verwenden, um die Abhängigkeiten besser kontrollieren zu können. Das Kompilieren während des Bauens eines Docker Containers war jedoch ebenfalls nicht schnell genug. Jedoch wurden auch nicht alle Konfigurationsmöglichkeiten genauer getestet.
-	
+Docker bietet eine portable und konsistente Laufzeitumgebung für Softwareanwendungen. Es wurde auch probiert Docker zu verwenden, um die Abhängigkeiten besser kontrollieren zu können. Das Kompilieren während des Bauens eines Docker Containers war jedoch ebenfalls nicht schnell genug.
+
 Für das Projekt wurde ein anderer Ansatz gewählt: Simulation.
 
 \begin{figure}[H]
@@ -67,16 +56,16 @@ Für das Projekt wurde ein anderer Ansatz gewählt: Simulation.
 
 Die Bibliothek, welche die grafischen Bausteinelemente auf der LED Matrix umsetzt, unterstützt ebenfalls die Simulation eines Bildschirmes auf einem PC \cite{githubEmbedded-graphicsSimulator}. Die simulierte LED Matrix muss etwas anders im Quellcode eingebunden werden, als die Hardware LED Matrix. Der Vorteil jedoch ist, dass die Logik für das Rendern des Bildes exakt gleich ist, und derselbe Quellcode genutzt wird.
 
-Für die Kommunikation mit dem USB Logikanalysator wird die Bibliothek \emph{sigrok} benutzt. \emph{Sigrok} unterstützt nicht nur die Kommunikation mit dem USB Gerät, sondern auch das Abspielen eines vorher  mit dem USB Logikanalysator aufgenommen Signals. So kann ein DMX Paket aufgenommen werden, und beim Entwickeln einfach zum Testen genutzt werden. Beim Entwickeln der Software ist es hilfreich, nicht jedes mal die gesamte Hardware aufbauen zu müssen. Der Computer, der zum Entwickeln benutzt wird, benötigt daher auch alle Abhängigkeiten und Bibliotheken, die das Programm verwendet. Dies ist bei Linux mit 'sudo apt install libsigrok' möglich. Auf dem Mac ist dies mithilfe 'brew install libsigkrok' möglich. Leider hat Windows keinen eigenen Paketmanager. Auf Windows ist dies auch möglich, erfordert aber etwas mehr Arbeit.
+Für die Kommunikation mit dem USB Logikanalysator wird die Bibliothek \emph{sigrok} \cite{githubLibsigrok} benutzt. \emph{Sigrok} unterstützt nicht nur die Kommunikation mit dem USB Gerät, sondern auch das Abspielen eines vorher  mit dem USB Logikanalysator aufgenommen Signals. So kann ein DMX Paket aufgenommen werden, und beim Entwickeln einfach zum Testen genutzt werden. Beim Entwickeln der Software ist es hilfreich, nicht jedes mal die gesamte Hardware aufbauen zu müssen. Der Computer, der zum Entwickeln benutzt wird, benötigt daher auch alle Abhängigkeiten und Bibliotheken, die das Programm verwendet. Dies ist bei Linux mit \begin{verbatim}sudo apt install libsigrok\end{verbatim} möglich. Auf dem Mac ist dies mithilfe \begin{verbatim}brew install libsigkrok\end{verbatim} möglich. Leider hat Windows keinen eigenen Paketmanager. Auf Windows ist dies auch möglich, erfordert aber etwas mehr Arbeit.
 
-Durch die Unterstürzung einer Simulation, können andere Entwickler das Programm austesten, ohne selber die Hardware zur Verfügung zu haben. Entwickler, die sich einen genaueren Eindruck vom Projekt machen wollen, können dies mithilfe der Simulation sehr einfach machen.
+Durch die Unterstürzung einer Simulation, können andere Entwickler/-innen das Programm ausprobieren, ohne selber die Hardware zur Verfügung zu haben. Entwickler/-innen, die sich einen genaueren Eindruck vom Projekt machen wollen, können dies mithilfe der Simulation sehr einfach machen.
 
 
 \section{Signal Decodierung}
 
 % TODO callback to c in rust for usb analyzer
 
-Das Signal wird in Echtzeit vom Logikanalysator erfasst. Diese Rohdaten werden dann für die Signaldecodierung mithilfe der \emph{sigrokDecode} Bibliothek decodiert. Die Aufnahme der Rohdaten als auch die Signaldecodierung wird asynchron in einem separaten Ausführungsstrang (\emph{thread}) umgesetzt. Die Bibliothek, welche zum Decodieren verwendet wird, gruppiert jedoch nicht das gesamte DMX Paket, sondern streamt die einzelnen decodierten Ereignisse wie z.B. das \emph{Break} Signal, Mark \emph{After Break (MAB)} oder die einzelnen Bits.
+Das Signal wird in Echtzeit vom Logikanalysator erfasst. Diese Rohdaten werden dann für die Signaldecodierung mithilfe der \emph{sigrokDecode} \cite{githubLibsigrokDecode} Bibliothek decodiert. Die Aufnahme der Rohdaten als auch die Signaldecodierung wird asynchron in einem separaten Ausführungsstrang (\emph{Thread}) umgesetzt. Die Bibliothek, welche zum Decodieren verwendet wird, gruppiert jedoch nicht das gesamte DMX Paket, sondern streamt die einzelnen decodierten Ereignisse wie z.B. das Pause Signal, Mark \emph{After Break (MAB)} oder die einzelnen Bits.
 
 Die asynchron laufenden Ausführungsstränge müssen für den Datenaustausch synchronisiert werden. Für die Kommunikation werden sogenannte Rust Kanäle verwendet.
 
@@ -106,7 +95,7 @@ Das DMX Pakets wird mithilfe eines Zustandsautomaten zusammengefasst:
 	\label{fig:my_label}
 \end{figure}
 
-Der Zustandsautomaten empfängt die einzelnen decodierten Ereignisse, prüft die Reihenfolge und fasst ein komplett empfangenes Paket zusammen. Das Paket fängt mit der \emph{Break} und \emph{Mark After Break (MAB)} an. Danach folgen bis zu 513 Bytes. Der erste Byte ist der \emph{Startcode}. Danach folgt mindestens ein und bis zu 512 weitere Kanäle.
+Der Zustandsautomaten empfängt die einzelnen decodierten Ereignisse, prüft die Reihenfolge und fasst ein komplett empfangenes Paket zusammen. Das Paket fängt mit der Pause und dem \emph{Mark After Break (MAB)} an. Danach folgen bis zu 513 Bytes. Der erste Byte ist der \emph{Startcode}. Danach folgt mindestens ein und bis zu 512 weitere Kanäle.
 
 Die Zusammenfassung der DMX Pakete und das Rendern des Bildes werden ebenfalls in separierten Ausführungsstränge berechnet, da beide Berechnungen sich nicht gegenseitig blockieren sollten. Ist ein DMX Paket komplett zusammengefasst, so wird dieses auch wiederum über einen Rust Kanal asynchron zum Ausführungsstrang des Bildschirmrenderers übertragen.  
 
@@ -122,7 +111,7 @@ Jedes DMX Paket fängt mit der Reset Sequenz an.
 	\shadowimage[width=0.5\linewidth]{Pictures/screenshotResetSequence}\\
 	\caption{Reset Sequenz}
 \end{figure}
-Diese Sequenz beseht aus dem \emph{Break}, \emph{Mark After Break (MAB)} und dem \emph{Startcode}. Der \emph{Startcode} ist bei DMX Paketen immer 0. Jeder Byte, der Übertragen wird, enthält einen \emph{Startcode} (in grün) und zwei Stopbits (in rot). Die Timings werden unter der Wellenform dargestellt.
+Diese Sequenz beseht aus dem Pause Signal, der \emph{Mark After Break (MAB)} und dem \emph{Startcode}. Der \emph{Startcode} ist bei DMX Paketen immer 0. Jeder Byte, der Übertragen wird, enthält einen \emph{Startcode} (in grün) und zwei Stopbits (in rot). Die Zeitabstände werden unter der Wellenform dargestellt.
 
 Aufgrund der kleinen Auflösung sind die Zeitabstände nicht maßstabsgetreu. Ein Bit ist eigentlich nur 4µs lang. Auf dem Bildschirm sieht er jedoch deutlich länger aus. Am unterem Bildschirm Rand befindet sich die Abtastrate, mit der das Signal aufgenommen wird. Aus der Abtastrate leitet sich auch die Messunsicherheit der Zeitabstände ab.
 
@@ -202,7 +191,7 @@ Die simulierten Bildschirmansichten funktionieren ebenfalls auf der echten Hardw
 \end{figure}
 
 
-\section{Kontrolle DMX Signalanalyse}
+\section{Kontrollierung der DMX Signalanalyse}
 
 Das analysierte Signal wird mithilfe eines Oszilloskope überprüft, um die dargestellte Wellenform zu verifizieren. Das Oszilloskop ermittelt den Durchschnitt von 4 Aufnahmen, um das rauschfreie Signal abzubilden.
 
@@ -218,13 +207,15 @@ Die analysierten Zeitabstände zeigen einen Unterschied zwischen Logik Analysato
 	\begin{tabular}{ r | l | l | l}
 		Bezeichnung: & Logikanalysator & Oszilloskope & $\Delta Zeit$ \\ 
 		\hline
-		Space & 102.91 µs & 101.4 µs & 1.51 µs\\
+		Pause & 102.91 µs & 101.4 µs & 1.51 µs\\
 		MAB & 31.283 µs & 31.65 µs & 0.367 µs\\
 	\end{tabular}
 	\caption{Vergleich Projekt und Oszilloskope: Reset Sequenz}
 \end{figure}
 
 Die analysierten Zeitabstände zeigen einen Unterschied zwischen dem  Logikanalysator und dem Oszilloskope. Die Messunsicherheit des Logikanalysators beträgt 41ns. Die mit dem Oszilloskope gemessene Zeit hat jedoch eine Abweichung größer als die Messunsicherheit.
+
+Im nächsten Bild wird die Wellenform des ersten Kanals verglichen:
 
 \begin{figure}[H]
 	\centering
@@ -243,14 +234,14 @@ Die analysierten Zeitabstände zeigen einen Unterschied zwischen dem  Logikanaly
 \end{figure}
 
 
-Auf dem linken Bildschirm, wird aufgrund der kleine Auflösung die Start- und Stopbits nicht dargestellt. Der erste und letzte Bit vom ersten Kanal ist beim Oszilloskope mit dem Mauszeiger markiert. Die dargestellte Bytereihenfolge ist identisch mit der Reihenfolge des Oszilloskope.
+Auf dem linken Bildschirm, wird aufgrund der kleinen Auflösung die Start- und Stopbits nicht dargestellt. Das erste und letzte Bit vom ersten Kanal ist beim Oszilloskope mit dem Mauszeiger markiert. Die dargestellte Bytereihenfolge ist identisch mit der Reihenfolge des Oszilloskops.
 
-Die Zeitmessunsicherheit bei einer Abtastrate von 24 Mhz beträgt 41ns. Die Abweichungen sind oft größer. Beim \emph{Break} Signal ist die Abweichung 1.51µs. Die Anstiegszeit des DMX Signals ist leider auch nicht perfekt.
+Die Zeitmessunsicherheit bei einer Abtastrate von 24 Mhz beträgt 41ns. Die Abweichungen sind oft größer. Beim Pause Signal ist die Abweichung 1.51µs. Die Anstiegszeit des DMX Signals ist leider auch nicht perfekt und könnte die Ursache der Messdifferenz sein.
 
 \begin{figure}[H]
 	\centering
 	\shadowimage[width=0.8\linewidth]{Pictures/oscilloscopeRiseTime}
-	\caption{Rise Time Signal}
+	\caption{Anstiegszeit des Signals}
 \end{figure}
 
 Die Anstiegszeit beträgt 1.010 µs. Es ist möglich, dass der Logikanalysator erst bei einem anderen Logikpegelschwellenwert ausschlägt als das Oszilloskope. Der untersuchte Zeitunterschied könnte dadurch erklärt werden.
