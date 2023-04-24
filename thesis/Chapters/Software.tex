@@ -65,9 +65,9 @@ Durch die Unterstürzung einer Simulation, können andere Entwickler/-innen das 
 
 % TODO callback to c in rust for usb analyzer
 
-Das Signal wird in Echtzeit vom Logikanalysator erfasst. Diese Rohdaten werden dann für die Signaldecodierung mithilfe der \emph{sigrokDecode} \cite{githubLibsigrokDecode} Bibliothek decodiert. Die Aufnahme der Rohdaten als auch die Signaldecodierung wird asynchron in einem separaten Ausführungsstrang (\emph{Thread}) umgesetzt. Die Bibliothek, welche zum Decodieren verwendet wird, gruppiert jedoch nicht das gesamte DMX Paket, sondern streamt die einzelnen decodierten Ereignisse wie z.B. das Pause Signal, Mark \emph{After Break (MAB)} oder die einzelnen Bits.
+Das Signal wird in Echtzeit vom Logikanalysator erfasst. Diese Rohdaten werden dann für die Signaldecodierung mithilfe der \emph{sigrokDecode} \cite{githubLibsigrokDecode} Bibliothek decodiert. Die Aufnahme der Rohdaten als auch die Signaldecodierung wird asynchron in einem separaten \emph{Thread} umgesetzt. Die Bibliothek, welche zum Decodieren verwendet wird, gruppiert jedoch nicht das gesamte DMX Paket, sondern streamt die einzelnen decodierten Ereignisse wie z.B. das Pause Signal, Mark \emph{After Break (MAB)} oder die einzelnen Bits.
 
-Die asynchron laufenden Ausführungsstränge müssen für den Datenaustausch synchronisiert werden. Für die Kommunikation werden sogenannte Rust Kanäle verwendet.
+Die asynchron laufenden \emph{Thread} müssen für den Datenaustausch synchronisiert werden. Für die Kommunikation werden sogenannte Rust Kanäle verwendet.
 
 Das DMX Pakets wird mithilfe eines Zustandsautomaten zusammengefasst:
 
@@ -97,7 +97,7 @@ Das DMX Pakets wird mithilfe eines Zustandsautomaten zusammengefasst:
 
 Der Zustandsautomaten empfängt die einzelnen decodierten Ereignisse, prüft die Reihenfolge und fasst ein komplett empfangenes Paket zusammen. Das Paket fängt mit der Pause und dem \emph{Mark After Break (MAB)} an. Danach folgen bis zu 513 Bytes. Der erste Byte ist der \emph{Startcode}. Danach folgt mindestens ein und bis zu 512 weitere Kanäle.
 
-Die Zusammenfassung der DMX Pakete und das Rendern des Bildes werden ebenfalls in separierten Ausführungsstränge berechnet, da beide Berechnungen sich nicht gegenseitig blockieren sollten. Ist ein DMX Paket komplett zusammengefasst, so wird dieses auch wiederum über einen Rust Kanal asynchron zum Ausführungsstrang des Bildschirmrenderers übertragen.  
+Die Zusammenfassung der DMX Pakete und das Rendern des Bildes werden ebenfalls in separierten \emph{Threads} berechnet, da beide Berechnungen sich nicht gegenseitig blockieren sollten. Ist ein DMX Paket komplett zusammengefasst, so wird dieses auch wiederum über einen Rust Kanal asynchron zum \emph{Thread} des Bildschirmrenderers übertragen.  
 
 \section{Signal Darstellung}
 Das analysierte Signal wird als Wellenform auf dem Bildschirm dargestellt.

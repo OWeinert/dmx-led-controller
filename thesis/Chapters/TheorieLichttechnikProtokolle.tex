@@ -10,7 +10,7 @@ Das Lichtsteuerungsprotokoll DALI (\emph{Digital Addressable Lighting Interface}
 
 DALI wurde erstmals in den späten 1990er \cite{DALI-2_certification} von der europäischen Lichtindustrie entworfen. Viele Hersteller verwenden seither das Protokoll weltweit für die Steuerung von deren Produkten. Dadurch können Vorschaltgeräte vor den Leuchten von verschiedenen Hersteller nebeneinander eingesetzt werden, ohne dass der Anwender sich mit technischen Unterschieden auseinandersetzten muss \cite[S.2, ch. 3.1]{DALI-Lichtmanagement}.
 
-Eines der Hauptvorteile von DALI ist die genaue Steuerung einzelner oder zu Gruppen zusammengefassten Leuchten. Jede Leuchte kann eine eindeutige Adresse zugewiesen bekommen. Die einzelnen Leuchten können dadurch separat voneinander gesteuert werden. Das Protokoll ermöglicht es, die Leuchten zu dimmen und somit maßgeschneidert an die speziellen Bedürfnisse der Umgebung anzupassen. Helles Arbeitslicht, Umgebungslicht als auch eine Akzentbeleuchtung kann damit gesteuert werden. Es können auch verschiedene Lichtszenen vorprogrammiert werden, z.B. eine Szene für die Tag- und Nachtbeleuchtung, (vgl.\ref{fig:dali_scenes}).
+Eines der Hauptvorteile von DALI ist die genaue Steuerung einzelner oder zu Gruppen zusammengefassten Leuchten. Jede Leuchte kann eine eindeutige Adresse zugewiesen bekommen. Die einzelnen Leuchten können dadurch separat voneinander gesteuert werden\cite[S.2, ch. 3.1]{DALI-Lichtmanagement}. Das Protokoll ermöglicht es, die Leuchten zu dimmen und somit maßgeschneidert an die speziellen Bedürfnisse der Umgebung anzupassen. Helles Arbeitslicht, Umgebungslicht als auch eine Akzentbeleuchtung kann damit gesteuert werden. Es können auch verschiedene Lichtszenen vorprogrammiert werden, z.B. eine Szene für die Tag- und Nachtbeleuchtung, (vgl.\ref{fig:dali_scenes}).
 
 \begin{figure}[H]
 	\centering
@@ -28,9 +28,9 @@ Eines der Hauptvorteile von DALI ist die genaue Steuerung einzelner oder zu Grup
 	\label{fig:dali_scenes}
 \end{figure}
 
-DALI ist ein digitales Protokoll, welches eine bidirektionale Kommunikation zwischen Leuchten und Controller ermöglicht\cite[S.1]{DALI-Lichtmanagement}. Dadurch können auch Fehlermeldungen der Leuchten ausgelesen werden. Eine kaputte Leuchte kann so einfach gefunden und ausgetauscht werden.  Aber auch andere Sensoren wie Tageslichtsensoren oder Bewegungssensoren können ins Netzwerk eingeschlossen werden. Damit kann die Helligkeit beispielsweise durch das Tageslicht oder durch die Anwesenheit von Menschen gesteuert werden. Der Stromverbrauch kann so massiv reduziert werden, da die Leuchten nur benutzt werden, wenn sie auch tatsächlich gebraucht werden.
+DALI ist ein digitales Protokoll, welches eine bidirektionale Kommunikation zwischen Leuchten und Controller ermöglicht\cite[S.1]{DALI-Lichtmanagement}. Dadurch können auch Fehlermeldungen der Leuchten ausgelesen werden. Eine kaputte Leuchte kann so einfach gefunden und ausgetauscht werden.  Aber auch andere Sensoren wie Tageslichtsensoren oder Bewegungssensoren können ins Netzwerk eingeschlossen werden\cite[S.3]{DALI_Handbuch}. Damit kann die Helligkeit beispielsweise durch das Tageslicht oder durch die Anwesenheit von Menschen gesteuert werden. Der Stromverbrauch kann so massiv reduziert werden, da die Leuchten nur benutzt werden, wenn sie auch tatsächlich gebraucht werden.
 
-DALI basiert auf einem einfachen zwei Kabel Bussystem. Das Bussystem kann am Ende des Busses fortgeführt werden, um es nachträglich zu erweitern. Der DALI Bus besteht aus zwei Leitungen. Ist die Verwendung von DALI gewünscht, so müssen ggf. diese Leitungen nachgerüstet werden. Wird dies bereits beim Bau eingeplant, können die freien Adern in einer Netzleitung benutzt werden\cite[S. c.3.2.2]{DALI-Lichtmanagement} (vgl.\ref{fig:wiring diagram}). Auf die Polarität der DALI Signale muss nicht geachtet werden \cite[p.3]{DALI_Handbuch}.
+DALI basiert auf einem einfachen zwei Kabel Bussystem\cite[S.5]{DALI_Handbuch}. Das Bussystem kann am Ende des Busses fortgeführt werden, um es nachträglich zu erweitern. Der DALI Bus besteht aus zwei Leitungen. Ist die Verwendung von DALI gewünscht, so müssen ggf. diese Leitungen nachgerüstet werden. Wird dies bereits beim Bau eingeplant, können die freien Adern in einer Netzleitung benutzt werden\cite[S. c.3.2.2]{DALI-Lichtmanagement} (vgl.\ref{fig:wiring diagram}). Auf die Polarität der DALI Signale muss nicht geachtet werden \cite[p.3]{DALI_Handbuch}.
 
 \begin{figure}[H]
 	\centering
@@ -41,7 +41,7 @@ DALI basiert auf einem einfachen zwei Kabel Bussystem. Das Bussystem kann am End
 
 Weiterhin können die DALI Controller einfach programmiert werden, um eine spätere Änderung der Leuchten einzustellen.
 
-Neben den vielen Vorteilen hat das DALI Protokoll auch einige Limitierungen. Ein DALI Bus ist insgesamt auf maximal 64 Adressen begrenzt \cite[S.7]{DALI_Handbuch}. Jede Adresse hat einen Wertebereich von 8 Bit \cite[S.1]{DALI-Lichtmanagement}. Eine Leuchte kann daher z.B. auf maximal 256 verschiedene Helligkeitsstufen eingestellt werden. Es können maximal 16 Gruppen und 16 verschiedene Lichtszenen programmiert werden. Die geringe Datenrate von $1,2 \frac{\SI{}{\kilo\bit}}{\SI{}{\s}}$ limitiert das Protokoll auf eine Aktualisierungsrate von ca. 25-30 Herz. Weiterhin können die Kabel maximal 300 Meter lang verlegt werden, bevor sie wieder verstärkt werden müssen \cite[S.3]{DALI_Handbuch}. 
+Neben den vielen Vorteilen hat das DALI Protokoll auch einige Limitierungen. Ein DALI Bus ist insgesamt auf maximal 64 Adressen begrenzt \cite[S.7]{DALI_Handbuch}. Jede Adresse hat einen Wertebereich von 8 Bit \cite[S.1]{DALI-Lichtmanagement}. Eine Leuchte kann daher z.B. auf maximal 256 verschiedene Helligkeitsstufen eingestellt werden. Es können maximal 16 Gruppen und 16 verschiedene Lichtszenen programmiert werden. Die geringe Datenrate von $1,2 \frac{\SI{}{\kilo\bit}}{\SI{}{\s}}$ limitiert das Protokoll auf eine Aktualisierungsrate von ca. 25-30 Hz\cite[S.4]{DALI_Handbuch}. Weiterhin können die Kabel maximal 300 Meter lang verlegt werden, bevor sie wieder verstärkt werden müssen \cite[S.3]{DALI_Handbuch}. 
 
 Im Vergleich zu einem analogen System, hat DALI keine großen Probleme mit Interferenzen oder Störungen von externen Quellen. Das Protokoll ist selbst auf langen Strecken sehr zuverlässig.
 
@@ -62,9 +62,9 @@ DMX (\emph{Digital Multiplex}) ist ebenfalls wie DALI ein Lichtsteuerprotokoll. 
 
 DMX wurde erstmals im Jahr 1986 vorgestellt \cite[S.5, ch. 2.1]{DMX101-Handbook}. Seither wurde es der verbreitetste Industriestandard für koordinierte Lichtshows. Genau wie DALI, ist DMX ebenfalls ein digitales Steuerprotokoll. Über ein DMX Kabel kann jeweils ein DMX Universum übertragen werden. Ein DMX Universum kann mehrere Kanäle gleichzeitig steuern. Ein Kanal kann dabei, z.B. auf die Farbe einer Leuchte, oder die Helligkeit einer Leuchte abgebildet werden. Das DMX Protokoll basiert auf einer seriellen Datenübertragung. Das Protokoll baut auf dem RS-485 Standard\cite[S.11, ch. 3.2]{DMX101-Handbook} auf.
 
-Eines der Hauptvorteile von DMX ist die zentrale Steuerung von einer großen Anzahl von Leuchten über eine Konsole. Komplexere Leuchtkonstellationen mit vielen unterschiedlichen Leuchten sind dadurch umsetzbar. Mehrere Leuchten können so zusammengeschaltet werden, um komplizierte Effekte und Lichtszenen aufzubauen. Oftmals werden verschiedene Animationsmuster vorprogrammiert und als Lichtsequenz abgespeichert. Lichtgestalter/-innen können dadurch einfach und schnell verschiedene Animationen und Konfigurationen aufrufen, um die Lichtszenerie auf die verschiedenen Phasen der Show abzustimmen.
+Eines der Hauptvorteile von DMX ist die zentrale Steuerung von einer großen Anzahl von Leuchten über eine Konsole. Komplexere Leuchtkonstellationen mit vielen unterschiedlichen Leuchten sind dadurch umsetzbar. Mehrere Leuchten können so zusammengeschaltet werden, um komplizierte Effekte und Lichtszenen aufzubauen. Oftmals werden verschiedene Animationsmuster vorprogrammiert und als Lichtsequenz abgespeichert. Lichtgestalter/-innen können dadurch einfach und schnell verschiedene Animationen und Konfigurationen aufrufen, um die Lichtszenerie auf die verschiedenen Phasen der Vorführung abzustimmen.
 
-Die Verkabelung von DMX ist einfach. In der Regel wird das Datensignal getrennt von der Stromversorgung geführt. Das Datensignal kann mithilfe einer Gänseblümchenkette (\emph{Daisy Chain}) (vgl. \ref{fig:dmx_wiring diagram}), einfach von Leuchte zu Leuchte verkabelt werden. Am Ende der Gänseblümchenkette, ist ein DMX-Terminator erforderlich, um die Datenintegrität innerhalb des Busses zu gewährleisten. Bei größeren Distanzen (ab 300 Meter) muss das DMX Signal verstärkt werden, um eine sichere Datenübertragung zu gewährleisten.
+Die Verkabelung von DMX ist einfach. In der Regel wird das Datensignal getrennt von der Stromversorgung geführt. Das Datensignal kann mithilfe einer Reihenschaltung (\emph{Daisy Chain}) (vgl. \ref{fig:dmx_wiring diagram}), einfach von Leuchte zu Leuchte verkabelt werden. Am Ende der Reihenschaltung, ist ein DMX-Terminator erforderlich, um die Datenintegrität innerhalb des Busses zu gewährleisten. Bei größeren Distanzen (ab 300 Meter) muss das DMX Signal verstärkt werden, um eine sichere Datenübertragung zu gewährleisten.
 
 \begin{figure}[H]
 	\centering
@@ -73,7 +73,7 @@ Die Verkabelung von DMX ist einfach. In der Regel wird das Datensignal getrennt 
 	\label{fig:dmx_wiring diagram}
 \end{figure}
 
-DMX ist unter anderem auch sehr flexibel und konfigurierbar. Das Protokoll erlaubt die Ansteuerung von selbst gebauten Leuchten. Hersteller können für ihre Produkte auch bereits vorgefertigte DMX Konfigurationen mitliefern. Lichtgestalter/-innen bekommen dadurch eine genaue Kontrolle über die Funktionalitäten der einzelenden Leuchten, wie z.B. die Farbeinstellungen oder Filterauswahl.
+DMX ist unter anderem auch sehr flexibel und konfigurierbar. Das Protokoll erlaubt die Ansteuerung von selbst gebauten Leuchten. Hersteller können für ihre Produkte auch bereits vorgefertigte DMX Konfigurationen mitliefern\cite[S.30]{DMX_Wiring}. Lichtgestalter/-innen bekommen dadurch eine genaue Kontrolle über die Funktionalitäten der einzelenden Leuchten, wie z.B. die Farbeinstellungen oder Filterauswahl.
 
 Ein weiterer Vorteil von DMX, ist die Möglichkeit mehrere Systeme zusammenzuschalten. Eine große Anzahl an DMX Universen können über eine Konsole gesteuert werden, um eine größere Anzahl von Leuchten zu steuern. DMX kann auch mit Audio oder Video Systemen integriert werden, um eine synchrone Licht und Sound Show mit visuellen Effekten aufzubauen.
 
@@ -109,13 +109,13 @@ Das MIDI Protokoll wurde erweitert, um neben den Musikinformationen, zusätzlich
 Die folgende Abbildung \ref{fig:MidiUseCase} zeigt ein selbstgebautes Steuergerät, welches Leuchten mithilfe eines MIDI Eingangssignales steuert.
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=.5\linewidth]{Pictures/midiUseCase}
+	\shadowimage[width=.5\linewidth]{Pictures/midiUseCase}
 	\caption{MIDI Steuergerät für Leuchten}
 	\label{fig:MidiUseCase}
 \end{figure}
  
 
-Neben den vielen Vorteilen hat MIDI aber auch einige Einschränkungen. MIDI ist nicht in der Lage, rohe Audiodateien zu versenden. MIDI kann nur digitale Signale verschicken, welche die Parameter und Benutzung der Musikinstrumente beschreibt. Daher ist auch ein separates Audiosignal erforderlich, um die Musik aufzunehmen, die mithilfe von MIDI erstellt wird. MIDI läuft mit ca. $31 \frac{\SI{}{\kilo\bit}}{\SI{}{\s}}$ \cite[S. 1]{MIDI-DETAILED-SPECIFICATION}. DMX hat im Vergleich dazu eine 8-mal höhere Datenrate. 
+Neben den vielen Vorteilen hat MIDI aber auch einige Einschränkungen. MIDI ist nicht in der Lage, rohe Audiodateien zu versenden\cite[S. 4]{MIDI-DETAILED-SPECIFICATION}. MIDI kann nur digitale Signale verschicken, welche die Parameter und Benutzung der Musikinstrumente beschreibt. Daher ist auch ein separates Audiosignal erforderlich, um die Musik aufzunehmen, die mithilfe von MIDI erstellt wird. MIDI läuft mit ca. $31 \frac{\SI{}{\kilo\bit}}{\SI{}{\s}}$ \cite[S. 1]{MIDI-DETAILED-SPECIFICATION}. DMX hat im Vergleich dazu eine 8-mal höhere Datenrate. 
 
 Die genaue und flexible Einstellungen hat es für Musizierende eine wesentliche Komponente für die Musikproduktion gemacht.
 
@@ -133,11 +133,11 @@ ZigBee ist ein Kabelloses-Protokoll, welches in den letzten Jahren stark an Popu
 
 ZigBee und IEEE 802.15.4 sind standardisierte Protokolle, welche die Netzwerkinfrastruktur bereitstellen. Dabei definiert der IEEE 802.15.4 Standard die physikalische Schicht, inklusive der MAC Adressen. ZigBee hingegen definiert die Netzwerk- und Anwendungsschicht \cite[S.5]{GettingStartedWithZigBee}.
 
-ZigBee hat einen geringen Stromverbrauch mit entsprechend verlangsamten Datenraten. Dadurch können auch batteriebetriebene Produkte lange durchhalten. Das Protokoll wurde entwickelt, um mit allen möglichen IoT (\emph{Internet of Things}) Geräten zu kommunizieren.
+ZigBee hat einen geringen Stromverbrauch mit entsprechend verlangsamten Datenraten. Dadurch können auch batteriebetriebene Produkte lange durchhalten. Das Protokoll wurde entwickelt, um mit allen möglichen IoT (\emph{Internet of Things}) Geräten zu kommunizieren\cite[S.8]{GettingStartedWithZigBee}.
 
 ZigBee Geräte kommunizieren über eine Mesh-Netzwerk-Topologie \cite[S.10]{GettingStartedWithZigBee}. Das bedeutet, jedes Gerät (oder auch jeder Knotenpunkt) kann als Verstärker fungieren, um die Netzwerkreichweite zu vergrößern. Dadurch können ZigBee Geräte durch die Wohnung verteilt werden, um ein robustes und zuverlässiges System aufzubauen.
 
-Philips Hue ist ein Produkt, welches sich auf inteligenten LED Leuchten fokussiert. Es kann auch mit anderen ZigBee kompatiblen Geräten verschaltet werden. Philips Hue kann per App einfach übers Mobiltelefon gesteuert werden. Die Helligkeit, Farbwärme oder auch ein Flackern wie bei einer Kerze kann eingestellt werden. Philips Hue kann unter anderem auch über Sprachassistenten wie Alexa oder dem Google Assistenten gesteuert werden.
+Philips Hue ist ein Produkt, welches sich auf inteligenten LED Leuchten fokussiert. Es kann auch mit anderen ZigBee kompatiblen Geräten verschaltet werden. Philips Hue kann per App einfach übers Mobiltelefon gesteuert werden. Die Helligkeit, Farbwärme oder auch ein Flackern wie bei einer Kerze kann eingestellt werden. Philips Hue kann unter anderem auch über Sprachassistenten wie Alexa oder dem Google Assistenten gesteuert werden\cite[S.5]{GettingStartedWithZigBee}.
 
 Ein weiterer Vorteil vom Hue System, ist der einfache Aufbau und Einrichtung. Mithilfe der Hue App können Lichtszenen einfach erstellt und abgerufen werden. Zeitsysteme können einprogrammiert werden, und mit einer Internetverbindung von überall, auch außer Hause, ferngesteuert werden. Auch können Bewegungsmelder, Dimmer oder Batterie betriebene Schalter benutzt werden und überall im Hause verteilt werden, um die Lichter entspannt von überall aus steuern zu können. Auch intelligente Steckdosen können mit dem System kontrolliert werden. 
 
