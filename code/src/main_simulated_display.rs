@@ -79,6 +79,6 @@ fn main() {
         //last = now;
         window.update(&display);
         display.clear(Rgb888::new(0, 0, 0)).unwrap();
-        thread::sleep(time::Duration::from_millis(20));
+        thread::sleep(time::Duration::from_micros(16666));
     }
 }
