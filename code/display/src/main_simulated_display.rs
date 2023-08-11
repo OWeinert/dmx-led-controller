@@ -1,6 +1,7 @@
 use core::time;
 //use std::time::Instant;
 use std::thread;
+use std::env;
 
 use cascade::cascade;
 use embedded_graphics::{pixelcolor::Rgb888, prelude::*, primitives::{Triangle, StyledDrawable, PrimitiveStyle}};
@@ -9,6 +10,7 @@ use embedded_graphics_simulator::{
 };
 
 use dlcl::interop;
+use relative_path::RelativePath;
 
 fn main() {
     let output_settings = OutputSettingsBuilder::new()
@@ -30,8 +32,10 @@ fn main() {
     */
     //let mut last: Instant = Instant::now();
 
-    let py_path: String = String::from("/home/ole/dev/coding-project/code/python/interop_test.py"); // TODO not use hardcoded path
-    let py_script = interop::python::load_py_script(py_path);
+    let root = env::current_dir().unwrap();
+    let py_path_rel = RelativePath::new("../python/interop_test.py");
+    let py_path = py_path_rel.to_logical_path(&root);
+    let py_script = interop::python::load_py_script(py_path.as_path());
     let _ = interop::python::call_setup(&py_script);
 
     'running: loop {
