@@ -2,11 +2,6 @@ use std::{path::Path, fs};
 
 use pyo3::{PyAny, Py, Python, types::PyModule, PyResult};
 
-/// Initializes the Python interpreter
-pub fn init_python() {
-    pyo3::prepare_freethreaded_python();
-}
-
 /// Loads the Python script at the given path string into a Py\<PyModule\> smart pointer
 /// 
 /// ## Arguments
@@ -40,7 +35,6 @@ pub fn load_py_script(path: &Path) -> Py<PyModule> {
             panic!();
         }
     };
-    init_python();
     let from_python: Py<PyModule> = Python::with_gil(|py| {
         let script: Py<PyModule> = PyModule::from_code(py, &py_file, "", "")
             .expect("Failed to build PyModule!")
@@ -86,7 +80,6 @@ pub fn call_loop(py_module: &Py<PyModule>) {
 /// * PyResult\<Py\<PyAny\>\> - The return value of the function
 /// 
 pub fn call_func0(py_module: &Py<PyModule>, func_name: &str) -> PyResult<Py<PyAny>> {
-    init_python();
     let result = Python::with_gil(|py| -> PyResult<Py<PyAny>> {
         let py_module = py_module.as_ref(py);
         let py_setup: Py<PyAny> = py_module.getattr(func_name)?.into();
