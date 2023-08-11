@@ -32,10 +32,13 @@ fn main() {
     */
     //let mut last: Instant = Instant::now();
 
+    // load the python script "interop_test.py" from the given relative path
     let root = env::current_dir().unwrap();
     let py_path_rel = RelativePath::new("../python/interop_test.py");
     let py_path = py_path_rel.to_logical_path(&root);
     let py_script = interop::python::load_py_script(py_path.as_path());
+
+    // call the setup method on the script
     let _ = interop::python::call_setup(&py_script);
 
     'running: loop {
