@@ -196,6 +196,7 @@ dependencies = [
  "measurements",
  "nalgebra",
  "regex",
+ "relative-path",
  "rpi-led-matrix",
  "scan_fmt",
  "strum",
@@ -756,6 +757,12 @@ name = "regex-syntax"
 version = "0.6.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
+
+[[package]]
+name = "relative-path"
+version = "1.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4bf2521270932c3c7bed1a59151222bd7643c79310f2916f01925e1e16255698"
 
 [[package]]
 name = "rpi-led-matrix"
