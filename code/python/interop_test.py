@@ -1,5 +1,5 @@
-def startup():
-    print("Startup")
+def setup():
+    print("Setup")
     return
 
 def loop():
