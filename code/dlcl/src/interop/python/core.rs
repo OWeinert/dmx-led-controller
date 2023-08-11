@@ -2,7 +2,12 @@ use std::{path::Path, fs};
 
 use pyo3::{PyAny, Py, Python, types::PyModule, PyResult};
 
-/// Loads the python script at the given path into a Py\<PyModule\> smart pointer
+/// Initializes the Python interpreter
+pub fn init_python() {
+    pyo3::prepare_freethreaded_python();
+}
+
+/// Loads the Python script at the given path string into a Py\<PyModule\> smart pointer
 /// 
 /// ## Arguments
 /// 
@@ -10,17 +15,32 @@ use pyo3::{PyAny, Py, Python, types::PyModule, PyResult};
 /// 
 /// ## Returns
 /// 
-/// * Py\<PyModule\> - The python scrip
+/// * Py\<PyModule\> - The Python scrip
 /// 
-pub fn load_py_script(path: String) -> Py<PyModule> {
+pub fn load_py_script_str(path: String) -> Py<PyModule> {
     let py_path = Path::new(&path);
-    let py_file = match fs::read_to_string(&py_path) {
-        Ok(path) => path,
+    return load_py_script(py_path);
+}
+
+/// Loads the Python script at the given path into a Py\<PyModule\> smart pointer
+/// 
+/// ## Arguments
+/// 
+/// * 'path' - A String object containing the path
+/// 
+/// ## Returns
+/// 
+/// * Py\<PyModule\> - The Python scrip
+/// 
+pub fn load_py_script(path: &Path) -> Py<PyModule> {
+    let py_file = match fs::read_to_string(path) {
+        Ok(p) => p,
         Err(error) => {
-            println!("Python file not found! path: {path} || err: {error}");
+            println!("Python file not found! path: {} || err: {}", path.to_string_lossy(), error);
             panic!();
         }
     };
+    init_python();
     let from_python: Py<PyModule> = Python::with_gil(|py| {
         let script: Py<PyModule> = PyModule::from_code(py, &py_file, "", "")
             .expect("Failed to build PyModule!")
@@ -34,7 +54,7 @@ pub fn load_py_script(path: String) -> Py<PyModule> {
 /// 
 /// ## Arguments
 /// 
-/// * 'py_module' - The python script
+/// * 'py_module' - The Python script
 pub fn call_setup(py_module: &Py<PyModule>) { 
     match call_func0(py_module, "setup") {
         Ok(_) => return,
@@ -46,7 +66,7 @@ pub fn call_setup(py_module: &Py<PyModule>) {
 /// 
 /// ## Arguments
 /// 
-/// * 'py_module' - The python script
+/// * 'py_module' - The Python script
 pub fn call_loop(py_module: &Py<PyModule>) {
     match call_func0(py_module, "loop") {
         Ok(_) => return,
@@ -58,7 +78,7 @@ pub fn call_loop(py_module: &Py<PyModule>) {
 /// 
 /// ## Arguments
 /// 
-/// * 'py_module' - The python script
+/// * 'py_module' - The Python script
 /// * 'func_name' - The name of the function
 /// 
 /// ## Returns
@@ -66,6 +86,7 @@ pub fn call_loop(py_module: &Py<PyModule>) {
 /// * PyResult\<Py\<PyAny\>\> - The return value of the function
 /// 
 pub fn call_func0(py_module: &Py<PyModule>, func_name: &str) -> PyResult<Py<PyAny>> {
+    init_python();
     let result = Python::with_gil(|py| -> PyResult<Py<PyAny>> {
         let py_module = py_module.as_ref(py);
         let py_setup: Py<PyAny> = py_module.getattr(func_name)?.into();
