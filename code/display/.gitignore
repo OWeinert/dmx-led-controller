@@ -1,2 +1,2 @@
-/target
-/libLogicAnalyzer/cmake-build-debug
+target/
+libLogicAnalyzer/cmake-build-debug
