@@ -1,6 +1,0 @@
-$ mkdir -p "/home/ole/dev/coding-project/dmx-led-controller/code/dlcl/target/debug/build/az-b2776df85c7ad16d/out/try_track_caller"
-$ cd "/home/ole/dev/coding-project/dmx-led-controller/code/dlcl/target/debug/build/az-b2776df85c7ad16d/out/try_track_caller"
-$ printf '%s' "// try_tra"... > "/home/ole/dev/coding-project/dmx-led-controller/code/dlcl/target/debug/build/az-b2776df85c7ad16d/out/try_track_caller/try_track_caller.rs"
-$ cd "/home/ole/dev/coding-project/dmx-led-controller/code/dlcl/target/debug/build/az-b2776df85c7ad16d/out/try_track_caller" && "/home/ole/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc" "try_track_caller.rs" "--emit=dep-info,metadata" >& /dev/null
-cargo:rustc-cfg=track_caller
-$ rm -r "/home/ole/dev/coding-project/dmx-led-controller/code/dlcl/target/debug/build/az-b2776df85c7ad16d/out/try_track_caller"
