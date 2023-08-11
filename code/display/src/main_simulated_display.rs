@@ -9,7 +9,7 @@ use embedded_graphics_simulator::{
     sdl2::Keycode, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 
-use dlcl::interop;
+use dlcl::interop::python;
 use relative_path::RelativePath;
 
 fn main() {
@@ -39,7 +39,7 @@ fn main() {
     let py_script = interop::python::load_py_script(py_path.as_path());
 
     // call the setup method on the script
-    let _ = interop::python::call_setup(&py_script);
+    let _ = python::call_setup(&py_script);
 
     'running: loop {
         //let now = Instant::now();
@@ -74,7 +74,7 @@ fn main() {
         view.on_user_update(&mut display, props);
         */
 
-        interop::python::call_loop(&py_script);
+        python::call_loop(&py_script);
 
         window.update(&display);
         display.clear(Rgb888::new(0, 0, 0)).unwrap();
