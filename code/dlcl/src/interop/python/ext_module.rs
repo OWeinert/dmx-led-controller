@@ -17,6 +17,7 @@ impl PyRgb888 {
 }
 
 /// Python binding for *draw::draw_pixel*
+/// 
 #[pyfunction]
 fn draw_pixel(x: i32, y: i32, color: &PyRgb888) {
     let rs_col = color.to_rgb888();
@@ -24,6 +25,7 @@ fn draw_pixel(x: i32, y: i32, color: &PyRgb888) {
 }
 
 /// The Python module configuration for dlcl
+/// 
 #[pymodule]
 fn dlcl(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(draw_pixel, m)?)?;
