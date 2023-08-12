@@ -74,24 +74,25 @@ pub fn set_framebuf_size(width: usize, height: usize) {
 /// * 'target' - The draw target
 /// 
 pub fn draw_framebuf<D>(target: &mut D)
-    where D: DrawTarget<Color = Rgb888> {
-        let buf = FRAME_BUF.lock().unwrap();
-        let buf_iter = buf.iter();
+where 
+    D: DrawTarget<Color = Rgb888> {
         
-        let mut i = 0;
-        let width: i32 = buf.width as i32;
-        let height: i32 = buf.height as i32;
-
-        let pixels = buf_iter.map(|color| {
-            let x: i32 = i % width;
-            let y: i32 = i / height;
-            i += 1;
-            return Pixel(Point::new(x, y), color.to_owned());
-        });
-        match pixels.draw(target) {
-            Ok(_) => {},
-            Err(_) => println!("Failed to draw frame buffer!")
-        };
+    let buf = FRAME_BUF.lock().unwrap();
+    let buf_iter = buf.iter();
+    
+    let mut i = 0;
+    let width: i32 = buf.width as i32;
+    let height: i32 = buf.height as i32;
+    let pixels = buf_iter.map(|color| {
+        let x: i32 = i % width;
+        let y: i32 = i / height;
+        i += 1;
+        return Pixel(Point::new(x, y), color.to_owned());
+    });
+    match pixels.draw(target) {
+        Ok(_) => {},
+        Err(_) => println!("Failed to draw frame buffer!")
+    };
 }
 
 /// Clears the frame buffer
@@ -125,8 +126,8 @@ pub fn draw_line(start_pos: Point, end_pos: Point, style: PrimitiveStyle<Rgb888>
     Line::new(start_pos, end_pos)
         .into_styled(style).pixels()
         .for_each(|p| {
-        buf.set_pixel_color(p.0, p.1);
-    });
+            buf.set_pixel_color(p.0, p.1);
+        });
 }
 
 /// Draws a circle of *diameter* at *top_left* in the frame buffer
