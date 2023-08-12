@@ -118,12 +118,14 @@ pub fn draw_pixel(pos: Point, color: Rgb888) {
 /// 
 /// * 'start_pos' - Start position of the line
 /// * 'end_pos' - End position of the line
-/// * 'color' - The line color
+/// * 'style' - The draw style. Also contains the line's color
 /// 
-pub fn draw_line(start_pos: Point, end_pos: Point, color: Rgb888) {
+pub fn draw_line(start_pos: Point, end_pos: Point, style: PrimitiveStyle<Rgb888>) {
     let mut buf = FRAME_BUF.lock().unwrap();
-    Line::new(start_pos, end_pos).points().for_each(|p| {
-        buf.set_pixel_color(p, color);
+    Line::new(start_pos, end_pos)
+        .into_styled(style).pixels()
+        .for_each(|p| {
+        buf.set_pixel_color(p.0, p.1);
     });
 }
 
@@ -133,22 +135,13 @@ pub fn draw_line(start_pos: Point, end_pos: Point, color: Rgb888) {
 /// 
 /// * 'top_left' - Top left position of the circle
 /// * 'diameter' - The circle diameter
-/// * 'color' - The circle color
-/// * 'filled' - If the circle is filled or hollow
+/// * 'style' - The draw style. Also contains the circle's color
 /// 
-pub fn draw_circle(top_left: Point, diameter: u32, color: Rgb888, filled: bool) {
+pub fn draw_circle(top_left: Point, diameter: u32, style: PrimitiveStyle<Rgb888> ){
     let mut buf = FRAME_BUF.lock().unwrap();
-    if filled {
-        Circle::new(top_left, diameter).points().for_each(|p| {
-            buf.set_pixel_color(p, color);
-        });
-    }
-    else {
-        Circle::new(top_left, diameter)
-            .into_styled(PrimitiveStyle::with_stroke(color, 1))
-            .pixels()
+    Circle::new(top_left, diameter)
+            .into_styled(style).pixels()
             .for_each(|p| {
                 buf.set_pixel_color(p.0, p.1);
             });
-    }
 }
