@@ -10,14 +10,18 @@ use embedded_graphics_simulator::{
 };
 
 use dlcl::interop::python;
+use dlcl::draw;
 use relative_path::RelativePath;
 
 fn main() {
+    let disp_width = 64;
+    let disp_height = 64;
+
     let output_settings = OutputSettingsBuilder::new()
         .pixel_spacing(2)
         .scale(10)
         .build();
-    let mut display = SimulatorDisplay::new(Size::new(64, 64));
+    let mut display = SimulatorDisplay::new(Size::new(disp_width, disp_height));
     let mut window = cascade! {
         Window::new("Dmx Led Controller", &output_settings);
         ..update(&display);
@@ -36,10 +40,15 @@ fn main() {
     let root = env::current_dir().unwrap();
     let py_path_rel = RelativePath::new("../python/interop_test.py");
     let py_path = py_path_rel.to_logical_path(&root);
-    let py_script = interop::python::load_py_script(py_path.as_path());
+    let py_script = python::load_py_script(py_path.as_path());
 
     // call the setup method on the script
     let _ = python::call_setup(&py_script);
+
+    draw::set_framebuf_size(disp_width, disp_height);
+
+    let mut x : f32 = 0.0;
+    let mut y : f32 = 0.0;
 
     'running: loop {
         //let now = Instant::now();
@@ -76,8 +85,19 @@ fn main() {
 
         python::call_loop(&py_script);
 
+        let step: f32 = 0.15;
+        x = x + step;
+        y = y + step;
+
+        let mult : f32 = 20.0;
+        let sin_x : i32 = (mult * x.sin()) as i32;
+        let cos_y : i32 = (mult * y.cos()) as i32;
+        draw::draw_pixel(Point::new(sin_x + 32, cos_y + 32), Rgb888::WHITE);
+        draw::draw_framebuf(&mut display);
+
         window.update(&display);
         display.clear(Rgb888::new(0, 0, 0)).unwrap();
+        draw::clear_framebuf();
         thread::sleep(time::Duration::from_micros(16666));
     }
 }
