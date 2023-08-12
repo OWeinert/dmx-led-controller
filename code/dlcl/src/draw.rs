@@ -1,6 +1,6 @@
 use std::{sync::Mutex, slice::Iter};
 
-use embedded_graphics::{pixelcolor::Rgb888, prelude::{RgbColor, DrawTarget, Point, PixelIteratorExt}, Pixel};
+use embedded_graphics::{pixelcolor::Rgb888, prelude::{RgbColor, DrawTarget, Point, PixelIteratorExt}, Pixel, primitives::{Line, StyledDrawable, PrimitiveStyle, PointsIter, Circle, Primitive}};
 use once_cell::sync::Lazy;
 
 pub struct FrameBuffer {
@@ -83,8 +83,8 @@ pub fn draw_framebuf<D>(target: &mut D)
         let height: i32 = buf.height as i32;
 
         let pixels = buf_iter.map(|color| {
-            let x: i32 = i / width;
-            let y: i32 = i % height;
+            let x: i32 = i % width;
+            let y: i32 = i / height;
             i += 1;
             return Pixel(Point::new(x, y), color.to_owned());
         });
@@ -100,7 +100,7 @@ pub fn clear_framebuf() {
     FRAME_BUF.lock().unwrap().clear();
 }
 
-/// Sets the *color* at position *pos* in the frame buffer
+/// Draws a pixel with *color* at *pos* in the frame buffer
 /// 
 /// ## Arguments
 /// 
@@ -109,4 +109,46 @@ pub fn clear_framebuf() {
 /// 
 pub fn draw_pixel(pos: Point, color: Rgb888) {
     FRAME_BUF.lock().unwrap().set_pixel_color(pos, color);
+}
+
+/// Draws a line with *color* from *start_pos* 
+/// to *end_pos* to the frame buffer
+/// 
+/// ## Arguments
+/// 
+/// * 'start_pos' - Start position of the line
+/// * 'end_pos' - End position of the line
+/// * 'color' - The line color
+/// 
+pub fn draw_line(start_pos: Point, end_pos: Point, color: Rgb888) {
+    let mut buf = FRAME_BUF.lock().unwrap();
+    Line::new(start_pos, end_pos).points().for_each(|p| {
+        buf.set_pixel_color(p, color);
+    });
+}
+
+/// Draws a circle of *diameter* at *top_left* in the frame buffer
+/// 
+/// ## Arguments
+/// 
+/// * 'top_left' - Top left position of the circle
+/// * 'diameter' - The circle diameter
+/// * 'color' - The circle color
+/// * 'filled' - If the circle is filled or hollow
+/// 
+pub fn draw_circle(top_left: Point, diameter: u32, color: Rgb888, filled: bool) {
+    let mut buf = FRAME_BUF.lock().unwrap();
+    if filled {
+        Circle::new(top_left, diameter).points().for_each(|p| {
+            buf.set_pixel_color(p, color);
+        });
+    }
+    else {
+        Circle::new(top_left, diameter)
+            .into_styled(PrimitiveStyle::with_stroke(color, 1))
+            .pixels()
+            .for_each(|p| {
+                buf.set_pixel_color(p.0, p.1);
+            });
+    }
 }

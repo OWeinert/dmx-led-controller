@@ -45,7 +45,7 @@ fn main() {
     // call the setup method on the script
     let _ = python::call_setup(&py_script);
 
-    draw::set_framebuf_size(disp_width, disp_height);
+    draw::set_framebuf_size(disp_width as usize, disp_height as usize);
 
     let mut x : f32 = 0.0;
     let mut y : f32 = 0.0;
@@ -93,6 +93,10 @@ fn main() {
         let sin_x : i32 = (mult * x.sin()) as i32;
         let cos_y : i32 = (mult * y.cos()) as i32;
         draw::draw_pixel(Point::new(sin_x + 32, cos_y + 32), Rgb888::WHITE);
+        draw::draw_line(Point::new(1, 1), Point::new(1, 20), Rgb888::RED);
+        draw::draw_circle(Point::new(3, 3), 6, Rgb888::GREEN, true);
+        draw::draw_circle(Point::new(6, 3), 6, Rgb888::BLUE, false);
+
         draw::draw_framebuf(&mut display);
 
         window.update(&display);
