@@ -19,6 +19,7 @@ impl FrameBuffer {
         frame_buf
     }
     
+    /*
     fn new(width: usize, height: usize) -> Self {
         let size = width * height;
         let frame_buf = FrameBuffer {
@@ -28,10 +29,13 @@ impl FrameBuffer {
         };
         frame_buf
     }
+    */
 
     fn resize(&mut self, new_width: usize, new_height: usize, fill_color: Rgb888) {
         let new_size = new_width * new_height;
         self.data.resize(new_size, fill_color);
+        self.width = new_width;
+        self.height = new_height;
     }
 
     fn iter(&self) -> Iter<'_, Rgb888> {
@@ -39,7 +43,13 @@ impl FrameBuffer {
     }
 
     fn clear(&mut self) {
-        self.data.clear();
+        self.data.fill_with(|| Rgb888::BLACK);
+    }
+
+    fn set_pixel_color(&mut self, pos: Point, color: Rgb888) {
+        let width = self.width as i32;
+        let i: usize = (pos.y * width + pos.x) as usize;
+        self.data[i] = color;
     }
 
 }
@@ -73,8 +83,8 @@ pub fn draw_framebuf<D>(target: &mut D)
         let height: i32 = buf.height as i32;
 
         let pixels = buf_iter.map(|color| {
-            let x: i32 = 10 / width;
-            let y: i32 = 10 % height;
+            let x: i32 = i / width;
+            let y: i32 = i % height;
             i += 1;
             return Pixel(Point::new(x, y), color.to_owned());
         });
@@ -98,8 +108,5 @@ pub fn clear_framebuf() {
 /// * 'color' - The pixel color
 /// 
 pub fn draw_pixel(pos: Point, color: Rgb888) {
-    let mut buf = FRAME_BUF.lock().unwrap();
-    let width = buf.width as i32;
-    let i: usize = (pos.y * width + pos.x) as usize;
-    buf.data[i] = color;
+    FRAME_BUF.lock().unwrap().set_pixel_color(pos, color);
 }
