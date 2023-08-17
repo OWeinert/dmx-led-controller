@@ -3,6 +3,8 @@ use std::iter::Map;
 use std::vec::IntoIter;
 
 use embedded_graphics::{pixelcolor::Rgb888, prelude::{Point, DrawTarget, PixelIteratorExt, RgbColor}, Pixel};
+use embedded_graphics::prelude::Size;
+use embedded_graphics::primitives::Rectangle;
 use once_cell::sync::Lazy;
 
 #[derive(Clone)]
@@ -132,11 +134,13 @@ pub fn set_framebuf_size(width: usize, height: usize) {
 /// 
 pub fn draw_framebuf<D>(target: &mut D)
 where 
-    D: DrawTarget<Color = Rgb888> {
-        
+    D: DrawTarget<Color = Rgb888>
+{
     let mut buf = GLOBALE_FRAMEBUF.lock().unwrap();
-    let pixels = buf.to_pixels();
-    match pixels.draw(target) {
+    match target.fill_contiguous(
+        &Rectangle::new(
+            Point::new(0,0), Size::new(buf.width as u32, buf.height as u32)), buf.iter().map(|p| *p))
+    {
         Ok(_) => {},
         Err(_) => println!("Failed to draw frame buffer!")
     };
