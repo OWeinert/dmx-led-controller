@@ -4,14 +4,15 @@ use std::thread;
 use std::env;
 
 use cascade::cascade;
-use embedded_graphics::{pixelcolor::Rgb888, prelude::*, primitives::{Triangle, StyledDrawable, PrimitiveStyle}};
+use embedded_graphics::{pixelcolor::Rgb888, prelude::*, primitives::PrimitiveStyle};
 use embedded_graphics_simulator::{
     sdl2::Keycode, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 
 use dlcl::interop::python;
-use dlcl::draw;
+use dlcl::draw::{self, framebuffer, layer};
 use relative_path::RelativePath;
+use dlcl::draw::layer::{DEFAULT_LAYER_0, DEFAULT_LAYER_1};
 
 fn main() {
     let disp_width = 64;
@@ -45,10 +46,9 @@ fn main() {
     // call the setup method on the script
     let _ = python::call_setup(&py_script);
 
-    draw::set_framebuf_size(disp_width as usize, disp_height as usize);
-
-    let mut x : f32 = 0.0;
-    let mut y : f32 = 0.0;
+    framebuffer::set_framebuf_size(disp_width as usize, disp_height as usize);
+    DEFAULT_LAYER_0.lock().unwrap().set_size(disp_width as usize, disp_height as usize);
+    DEFAULT_LAYER_1.lock().unwrap().set_size(disp_width as usize, disp_height as usize);
 
     'running: loop {
         //let now = Instant::now();
@@ -83,25 +83,23 @@ fn main() {
         view.on_user_update(&mut display, props);
         */
 
-        python::call_loop(&py_script);
+        //python::call_loop(&py_script);
 
-        let step: f32 = 0.15;
-        x = x + step;
-        y = y + step;
+        draw::draw_circle_layer(Point::new(8,8),
+                                16,
+                                PrimitiveStyle::with_fill(Rgb888::RED),
+                                &layer::DEFAULT_LAYER_0.lock().unwrap());
+        draw::draw_circle_layer(Point::new(16,8),
+                                16,
+                                PrimitiveStyle::with_stroke(Rgb888::BLUE, 1),
+                                &layer::DEFAULT_LAYER_1.lock().unwrap());
 
-        let mult : f32 = 20.0;
-        let sin_x : i32 = (mult * x.sin()) as i32;
-        let cos_y : i32 = (mult * y.cos()) as i32;
-        draw::draw_pixel(Point::new(sin_x + 32, cos_y + 32), Rgb888::WHITE);
-        draw::draw_line(Point::new(1, 1), Point::new(1, 20), Rgb888::RED);
-        draw::draw_circle(Point::new(3, 3), 6, Rgb888::GREEN, true);
-        draw::draw_circle(Point::new(6, 3), 6, Rgb888::BLUE, false);
-
-        draw::draw_framebuf(&mut display);
+        draw::draw_layers(&mut [&DEFAULT_LAYER_0.lock().unwrap(), &DEFAULT_LAYER_1.lock().unwrap()]);
+        framebuffer::draw_framebuf(&mut display);
 
         window.update(&display);
         display.clear(Rgb888::new(0, 0, 0)).unwrap();
-        draw::clear_framebuf();
+        framebuffer::clear_framebuf();
         thread::sleep(time::Duration::from_micros(16666));
     }
 }
