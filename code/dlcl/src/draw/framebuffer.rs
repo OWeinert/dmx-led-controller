@@ -1,4 +1,6 @@
 use std::{slice::Iter, sync::Mutex};
+use std::iter::Map;
+use std::vec::IntoIter;
 
 use embedded_graphics::{pixelcolor::Rgb888, prelude::{Point, DrawTarget, PixelIteratorExt, RgbColor}, Pixel};
 use once_cell::sync::Lazy;
@@ -49,7 +51,7 @@ impl FrameBuffer {
     /// * 'new_height' - The new height
     /// * 'fill_color' - The fill color for empty positions
     ///
-    fn resize(&mut self, new_width: usize, new_height: usize, fill_color: Rgb888) {
+    pub fn resize(&mut self, new_width: usize, new_height: usize, fill_color: Rgb888) {
         let new_size = new_width * new_height;
         self.data.resize(new_size, fill_color);
         self.width = new_width;
@@ -82,7 +84,8 @@ impl FrameBuffer {
         &mut self.data
     }
 
-    /// Converts the framebuffer into a vector of pixels
+    /// Converts the framebuffer into an iterator containing
+    /// the pixels
     ///
     /// ## Arguments
     ///
@@ -90,19 +93,19 @@ impl FrameBuffer {
     ///
     /// ## Returns
     ///
-    /// 'Vec\<Pixel\<Rgb888\>\>' - The pixel vector
+    /// 'IntoIter\<Pixel\<Rgb888\>\>' - The pixel iterator
     ///
-    pub fn to_pixels(&mut self) -> Vec<Pixel<Rgb888>> {
+    pub fn to_pixels(&mut self) -> IntoIter<Pixel<Rgb888>>{
         let buf_iter = self.iter();
         let mut i = 0;
-        let width: i32 = buf.width as i32;
-        let height: i32 = buf.height as i32;
+        let width: i32 = self.width as i32;
+        let height: i32 = self.height as i32;
         let pixels = buf_iter.map(|color| {
             let x: i32 = i % width;
             let y: i32 = i / height;
             i += 1;
             return Pixel(Point::new(x, y), color.to_owned());
-        }).collect();
+        }).collect::<Vec<Pixel<Rgb888>>>().into_iter();
         pixels
     }
 }
@@ -131,7 +134,7 @@ pub fn draw_framebuf<D>(target: &mut D)
 where 
     D: DrawTarget<Color = Rgb888> {
         
-    let buf = GLOBALE_FRAMEBUF.lock().unwrap();
+    let mut buf = GLOBALE_FRAMEBUF.lock().unwrap();
     let pixels = buf.to_pixels();
     match pixels.draw(target) {
         Ok(_) => {},

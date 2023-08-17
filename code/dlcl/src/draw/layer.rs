@@ -1,4 +1,5 @@
 use std::sync::{Mutex, MutexGuard};
+use embedded_graphics::{pixelcolor::Rgb888, prelude::*};
 
 use once_cell::sync::Lazy;
 
@@ -39,6 +40,10 @@ impl Layer {
     pub fn framebuf(&self) -> MutexGuard<'_, FrameBuffer> {
         self.framebuf.lock().unwrap()
     }
+
+    pub fn set_size(&mut self, width: usize, height: usize) {
+        self.framebuf().resize(width, height, Rgb888::BLACK);
+    }
  }
 
 #[derive(Copy, Clone)]
@@ -48,23 +53,23 @@ pub enum LayerMode {
     Script
 }
 
-pub const DEFAULT_LAYER_0: Layer = Layer {
+pub static DEFAULT_LAYER_0: Lazy<Mutex<Layer>> = Lazy::new(|| Mutex::new(Layer {
     layer_mode: LayerMode::DirectDraw,
     draw_order: 0,
     transparent_black: false,
     framebuf: Lazy::new(|| Mutex::new(FrameBuffer::new_empty()))
-};
+}));
 
-pub const DEFAULT_LAYER_1: Layer = Layer {
+pub static DEFAULT_LAYER_1: Lazy<Mutex<Layer>> = Lazy::new(|| Mutex::new(Layer {
     layer_mode: LayerMode::DirectDraw,
     draw_order: 1,
     transparent_black: true,
     framebuf: Lazy::new(|| Mutex::new(FrameBuffer::new_empty()))
-};
+}));
 
-pub const DEFAULT_LAYER_2: Layer = Layer {
+pub static DEFAULT_LAYER_2: Lazy<Mutex<Layer>> = Lazy::new(|| Mutex::new(Layer {
     layer_mode: LayerMode::Animated,
     draw_order: 2,
     transparent_black: true,
     framebuf: Lazy::new(|| Mutex::new(FrameBuffer::new_empty()))
-};
+}));
