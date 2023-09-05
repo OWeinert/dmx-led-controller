@@ -9,7 +9,7 @@ use embedded_graphics_simulator::{
     sdl2::Keycode, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
 
-use dlcl::interop::python;
+use dlcl::py_interop;
 use dlcl::draw::{self, framebuffer, layer};
 use relative_path::RelativePath;
 use dlcl::draw::layer::{DEFAULT_LAYER_0, DEFAULT_LAYER_1};
@@ -37,14 +37,14 @@ fn main() {
     */
     //let mut last: Instant = Instant::now();
 
-    // load the python script "interop_test.py" from the given relative path
+    // load the py_interop script "interop_test.py" from the given relative path
     let root = env::current_dir().unwrap();
-    let py_path_rel = RelativePath::new("../python/interop_test.py");
+    let py_path_rel = RelativePath::new("../py_interop/interop_test.py");
     let py_path = py_path_rel.to_logical_path(&root);
-    let py_script = python::load_py_script(py_path.as_path());
+    let py_script = py_interop::load_py_script(py_path.as_path());
 
     // call the setup method on the script
-    let _ = python::call_setup(&py_script);
+    let _ = py_interop::call_setup(&py_script);
 
     framebuffer::set_framebuf_size(disp_width as usize, disp_height as usize);
     DEFAULT_LAYER_0.lock().unwrap().set_size(disp_width as usize, disp_height as usize);
@@ -83,7 +83,7 @@ fn main() {
         view.on_user_update(&mut display, props);
         */
 
-        //python::call_loop(&py_script);
+        //py_interop::call_loop(&py_script);
 
         draw::draw_circle_layer(Point::new(8,8),
                                 16,
@@ -95,7 +95,7 @@ fn main() {
                                 &layer::DEFAULT_LAYER_1.lock().unwrap());
 
         draw::draw_layers(&mut [&DEFAULT_LAYER_0.lock().unwrap(), &DEFAULT_LAYER_1.lock().unwrap()]);
-        framebuffer::draw_framebuf(&mut display);
+        framebuffer::draw_framebuf_to_target(&mut display);
 
         window.update(&display);
         display.clear(Rgb888::new(0, 0, 0)).unwrap();

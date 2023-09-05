@@ -1,2 +1,2 @@
-pub mod interop;
+pub mod py_interop;
 pub mod draw;

@@ -1,11 +1,18 @@
 use std::{slice::Iter, sync::Mutex};
+use std::convert::Infallible;
 use std::iter::Map;
+use std::sync::MutexGuard;
 use std::vec::IntoIter;
 
-use embedded_graphics::{pixelcolor::Rgb888, prelude::{Point, DrawTarget, PixelIteratorExt, RgbColor}, Pixel};
-use embedded_graphics::prelude::Size;
+use embedded_graphics::{pixelcolor::Rgb888, prelude::Point, Pixel};
+use embedded_graphics::draw_target::DrawTarget;
+use embedded_graphics::prelude::{Size, RgbColor};
 use embedded_graphics::primitives::Rectangle;
-use once_cell::sync::Lazy;
+use embedded_graphics_simulator::sdl2::Keycode::Mute;
+use embedded_graphics_simulator::SimulatorDisplay;
+use once_cell::sync::{Lazy, OnceCell};
+use crate::draw;
+use crate::draw::DlclDrawTarget;
 
 #[derive(Clone)]
 pub struct FrameBuffer {
@@ -113,7 +120,7 @@ impl FrameBuffer {
 }
 
 /// The global framebuffer
-pub static GLOBALE_FRAMEBUF: Lazy<Mutex<FrameBuffer>> = Lazy::new(|| Mutex::new(FrameBuffer::new_empty()));
+pub static GLOBAL_FRAMEBUF: Lazy<Mutex<FrameBuffer>> = Lazy::new(|| Mutex::new(FrameBuffer::new_empty()));
 
 /// Sets the size of the frame buffer
 /// 
@@ -123,7 +130,7 @@ pub static GLOBALE_FRAMEBUF: Lazy<Mutex<FrameBuffer>> = Lazy::new(|| Mutex::new(
 /// * 'height' - Height of the frame buffer
 /// 
 pub fn set_framebuf_size(width: usize, height: usize) {
-    GLOBALE_FRAMEBUF.lock().unwrap().resize(width, height, Rgb888::BLACK);
+    GLOBAL_FRAMEBUF.lock().unwrap().resize(width, height, Rgb888::BLACK);
 }
 
 /// Draws the frame buffer to the *target*
@@ -132,11 +139,11 @@ pub fn set_framebuf_size(width: usize, height: usize) {
 /// 
 /// * 'target' - The draw target
 /// 
-pub fn draw_framebuf<D>(target: &mut D)
+pub fn draw_framebuf_to_target<D>(target: &mut D)
 where 
     D: DrawTarget<Color = Rgb888>
 {
-    let mut buf = GLOBALE_FRAMEBUF.lock().unwrap();
+    let mut buf = GLOBAL_FRAMEBUF.lock().unwrap();
     match target.fill_contiguous(
         &Rectangle::new(
             Point::new(0,0), Size::new(buf.width as u32, buf.height as u32)), buf.iter().map(|p| *p))
@@ -149,5 +156,5 @@ where
 /// Clears the frame buffer
 /// 
 pub fn clear_framebuf() {
-    GLOBALE_FRAMEBUF.lock().unwrap().clear();
+    GLOBAL_FRAMEBUF.lock().unwrap().clear();
 }

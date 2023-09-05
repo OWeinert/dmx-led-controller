@@ -1,12 +1,14 @@
 pub mod framebuffer;
 pub mod layer;
 
-use std::collections::{HashMap, HashSet};
-use std::sync::Mutex;
-use embedded_graphics::{prelude::*, pixelcolor::Rgb888, primitives::{PrimitiveStyle, Line, Primitive, Circle}};
-use once_cell::sync::Lazy;
+use std::collections::HashSet;
+use std::convert::Infallible;
+use std::sync::{Mutex, MutexGuard};
+use embedded_graphics::{prelude::*, pixelcolor::Rgb888, primitives::{PrimitiveStyle, Line, Circle}};
+use embedded_graphics_simulator::sdl2::Keycode::Mute;
+use once_cell::sync::{Lazy, OnceCell};
 use crate::draw::layer::Layer;
-use crate::draw::framebuffer::GLOBALE_FRAMEBUF;
+use crate::draw::framebuffer::GLOBAL_FRAMEBUF;
 
 /// Draws a pixel with *color* at *pos* in the frame buffer
 /// 
@@ -16,7 +18,7 @@ use crate::draw::framebuffer::GLOBALE_FRAMEBUF;
 /// * 'color' - The pixel color
 /// 
 pub fn draw_pixel_direct(pos: Point, color: Rgb888) {
-    GLOBALE_FRAMEBUF.lock().unwrap().set_pixel_color(pos, color);
+    GLOBAL_FRAMEBUF.lock().unwrap().set_pixel_color(pos, color);
 }
 
 /// Draws a line with *color* from *start_pos* 
@@ -29,7 +31,7 @@ pub fn draw_pixel_direct(pos: Point, color: Rgb888) {
 /// * 'style' - The draw style. Also contains the line's color
 /// 
 pub fn draw_line_direct(start_pos: Point, end_pos: Point, style: PrimitiveStyle<Rgb888>) {
-    let mut buf = GLOBALE_FRAMEBUF.lock().unwrap();
+    let mut buf = GLOBAL_FRAMEBUF.lock().unwrap();
     Line::new(start_pos, end_pos)
         .into_styled(style).pixels()
         .for_each(|p| {
@@ -46,7 +48,7 @@ pub fn draw_line_direct(start_pos: Point, end_pos: Point, style: PrimitiveStyle<
 /// * 'style' - The draw style. Also contains the circle's color
 /// 
 pub fn draw_circle_direct(top_left: Point, diameter: u32, style: PrimitiveStyle<Rgb888> ){
-    let mut buf = GLOBALE_FRAMEBUF.lock().unwrap();
+    let mut buf = GLOBAL_FRAMEBUF.lock().unwrap();
     Circle::new(top_left, diameter)
             .into_styled(style).pixels()
             .for_each(|p| {
@@ -110,7 +112,7 @@ pub fn draw_circle_layer(top_left: Point, diameter: u32, style: PrimitiveStyle<R
 /// * 'layers' - The slice of layers
 ///
 pub fn draw_layers(layers: &mut [&Layer]) {
-    let mut global_buf = GLOBALE_FRAMEBUF.lock().unwrap();
+    let mut global_buf = GLOBAL_FRAMEBUF.lock().unwrap();
 
     // sort layers by draw order and check draw order for duplicates
     layers.sort_by(|a, b| a.draw_order().cmp(&b.draw_order()));
@@ -127,6 +129,7 @@ pub fn draw_layers(layers: &mut [&Layer]) {
 }
 
 /// Checks draw order for duplicates
+///
 fn draw_order_checkdup(layers: &[&Layer]) {
     let draw_orders = layers.iter().map(|l| l.draw_order());
     let mut hashset = HashSet::new();
