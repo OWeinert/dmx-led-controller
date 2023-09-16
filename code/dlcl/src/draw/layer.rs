@@ -169,6 +169,9 @@ impl AnimatedLayer {
         layer
     }
 
+    ///
+    /// Consumes and draws the current frame of the current animation
+    ///
     fn draw_frame(&mut self) {
         // load next animation when no animation is loaded or the current loaded is one finished
         if self.current_animation.is_none()
@@ -183,14 +186,23 @@ impl AnimatedLayer {
         self.framebuf.set_data(&frame.pixels());
     }
 
+    ///
+    /// Queues an animation
+    ///
     pub fn enqueue(&mut self, animation: Animation) {
         self.animation_queue.push_back(animation.clone());
     }
 
+    ///
+    /// Dequeues an animation
+    ///
     fn dequeue(&mut self) -> Animation {
         self.animation_queue.pop_back().unwrap()
     }
 
+    ///
+    /// Skips to the next animation
+    ///
     fn next_animation(&mut self) {
         self.current_animation = Some(self.dequeue());
         if self.loop_animations {
@@ -227,6 +239,9 @@ impl Layer for AnimatedLayer {
 
 
 
+///
+/// A manager for handling the layers and interactions with them
+///
 pub struct LayerManager {
     layers: Vec<&dyn Layer>,
     rpc_queue: Option<VecDeque<RpcOp>>,
@@ -234,6 +249,18 @@ pub struct LayerManager {
 }
 
 impl LayerManager {
+
+    ///
+    /// Creates a new LayerManager
+    ///
+    /// ## Arguments
+    ///
+    /// * 'rpc_enabled' - enable gRpc interaction
+    ///
+    /// ## Returns
+    ///
+    /// 'Self' - The LayerManager
+    ///
     pub fn new(rpc_enabled: bool) -> Self {
         let rpc_queue: Option<VecDeque<RpcOp>> = if rpc_enabled {
             Some(VecDeque::new())
@@ -249,10 +276,28 @@ impl LayerManager {
         }
     }
 
+    ///
+    /// If gRpc interaction is enabled
+    ///
+    /// ## Returns
+    ///
+    /// * 'bool' - True if gRpc is enabled
+    ///
     pub fn rpc_enabled(&self) -> bool {
         self.rpc_enabled
     }
 
+    ///
+    /// Registers a layer in the LayerManager
+    ///
+    /// ## Arguments
+    ///
+    /// * 'layer' - The layer to be registered
+    ///
+    /// ## Returns
+    ///
+    /// 'Result<(), Err>' - Result containing Errors if the registration failed
+    ///
     pub fn register_layer(&mut self, layer: &mut dyn Layer) -> Result<(), Err> {
         let global_fbuf = GLOBAL_FRAMEBUF.lock().unwrap();
         if layer.width() != global_fbuf.width() || layer.height() != global_fbuf.height() {
@@ -264,6 +309,10 @@ impl LayerManager {
         Ok(())
     }
 
+    ///
+    /// Updates the LayerManager.
+    /// Has to be called once per Frame/Draw Call
+    ///
     pub fn update(&mut self) {
         if self.rpc_enabled {
             self.process_rpc_ops();
@@ -271,6 +320,17 @@ impl LayerManager {
         self.push_layers();
     }
 
+    ///
+    /// Returns a reference to the layer with the given id
+    ///
+    /// ## Arguments
+    ///
+    /// * 'id' - The layer id
+    ///
+    /// ## Returns
+    ///
+    /// '&dyn Layer' - Layer reference
+    ///
     pub fn layer_by_ids(&self, id: usize) -> &dyn Layer {
         self.layers[id]
     }
@@ -284,7 +344,9 @@ impl LayerManager {
         ids
     }
 
-
+    ///
+    /// Processes the rpc ops in the queue
+    ///
     fn process_rpc_ops(&mut self) -> Result<(), Err>{
         if !self.rpc_enabled || self.rpc_queue.is_none() {
             return Err("rpc is disabled or the rpc_queue is not initialized!");
@@ -318,10 +380,20 @@ impl LayerManager {
         return Ok(());
     }
 
+    ///
+    /// Push an rpc operation to the queue
+    ///
+    /// ## Arguments
+    ///
+    /// * 'rpc_op' - The rpc operation
+    ///
     pub(crate) fn push_rpc_op(&mut self, rpc_op: RpcOp) {
         self.rpc_queue.unwrap().push_back(rpc_op);
     }
 
+    ///
+    /// Pushes the layers of the LayerManager to the global framebuffer
+    ///
     fn push_layers(&mut self) {
         for layer in self.layers {
             layer.prep();
@@ -329,9 +401,10 @@ impl LayerManager {
         }
     }
 
+    ///
+    /// Sorts layers by id
+    ///
     fn sort_layers(&mut self) {
         self.layers.sort_by(|a, b| a.get_index().partial_cmp(b.get_index()).unwrap());
     }
-
-
 }

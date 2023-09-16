@@ -2,17 +2,18 @@ use embedded_graphics::Pixel;
 use embedded_graphics::pixelcolor::Rgb888;
 use crate::rpc::dlcl_rpc::{FrameDto, PixelDto};
 
+///
+/// The single frame of an animation
+///
 #[derive(Clone, PartialEq)]
 pub struct Frame {
-    pixels: Vec<Rgb888>,
-    frame_time: usize
+    pixels: Vec<Rgb888>
 }
 
 impl Frame {
     pub fn new(pixels: Vec<Rgb888>, frame_time: usize) -> Self {
         let frame = Frame {
-            pixels,
-            frame_time
+            pixels
         };
         frame
     }
@@ -20,12 +21,11 @@ impl Frame {
     pub fn pixels(&self) -> &Vec<Rgb888> {
         &self.pixels
     }
-
-    pub fn frame_time(&self) -> usize {
-        self.frame_time
-    }
 }
 
+///
+/// An animation consisting of multiple frames
+///
 #[derive(Clone, PartialEq)]
 pub struct Animation {
     frames: Vec<Frame>,
