@@ -1,0 +1,44 @@
+syntax = "proto3";
+package dlcl_rpc;
+
+service DlclDraw {
+  rpc GetAnimatedLayers(EmptyRequest) returns (AnimatedLayersResponse);
+
+  rpc PushAnimations(stream AnimationDTO) returns (StatusResponse);
+}
+
+enum DlclStatus {
+  SUCCESS = 0;
+  ERORR_INVALID_MODEL = 1;
+  ERROR_INVALID_REQUEST = 2;
+  ERROR_FULL_QUEUE = 3;
+}
+
+message AnimationDTO {
+  repeated FrameDTO frames = 1;
+  uint32 layer = 2;
+}
+
+message FrameDTO {
+  repeated PixelDTO pixels = 1;
+  uint32 frame_time = 2;
+}
+
+message PixelDTO {
+  uint32 x = 1;
+  uint32 y = 2;
+  uint32 r = 3;
+  uint32 g = 4;
+  uint32 b = 5;
+}
+
+message AnimatedLayersResponse {
+  repeated uint32 layers = 1;
+}
+
+message StatusResponse {
+  DlclStatus status = 1;
+  string message = 2;
+}
+
+message EmptyRequest {}
