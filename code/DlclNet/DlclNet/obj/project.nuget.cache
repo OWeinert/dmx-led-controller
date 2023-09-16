@@ -1,10 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "wx6zXGY2Beywjb49H6MdkFRK4TMMeY+5jjS1h5QUvXTBYAitVSOzt9csME5WU6cAg+bNg0Dei3INT+/P6qqUjQ==",
+  "dgSpecHash": "tDsgicb9UUtOFR/LvNavWbImSuzdJdfefDy/GVasv7zkAkZsivDXZEWAerKyEpt05pIwkjDRPTCjZ949hg0OSA==",
   "success": true,
   "projectFilePath": "/home/data/common/dev/rust/dmx-led-controller/code/DlclNet/DlclNet/DlclNet.csproj",
   "expectedPackageFiles": [
+    "/home/ole/.nuget/packages/google.protobuf/3.24.3/google.protobuf.3.24.3.nupkg.sha512",
+    "/home/ole/.nuget/packages/grpc.core.api/2.57.0/grpc.core.api.2.57.0.nupkg.sha512",
+    "/home/ole/.nuget/packages/grpc.net.client/2.57.0/grpc.net.client.2.57.0.nupkg.sha512",
+    "/home/ole/.nuget/packages/grpc.net.common/2.57.0/grpc.net.common.2.57.0.nupkg.sha512",
     "/home/ole/.nuget/packages/grpc.tools/2.58.0/grpc.tools.2.58.0.nupkg.sha512",
+    "/home/ole/.nuget/packages/microsoft.extensions.logging.abstractions/6.0.0/microsoft.extensions.logging.abstractions.6.0.0.nupkg.sha512",
     "/home/ole/.nuget/packages/microsoft.aspnetcore.app.ref/7.0.10/microsoft.aspnetcore.app.ref.7.0.10.nupkg.sha512"
   ],
   "logs": []
