@@ -1,18 +1,11 @@
 use std::{slice::Iter, sync::Mutex};
-use std::convert::Infallible;
-use std::iter::Map;
-use std::sync::MutexGuard;
 use std::vec::IntoIter;
 
 use embedded_graphics::{pixelcolor::Rgb888, prelude::Point, Pixel};
 use embedded_graphics::draw_target::DrawTarget;
 use embedded_graphics::prelude::{Size, RgbColor};
 use embedded_graphics::primitives::Rectangle;
-use embedded_graphics_simulator::sdl2::Keycode::Mute;
-use embedded_graphics_simulator::SimulatorDisplay;
-use iter_tools::Itertools;
-use once_cell::sync::{Lazy, OnceCell};
-use crate::draw;
+use once_cell::sync::Lazy;
 
 ///
 /// Represents a framebuffer containing Rgb888 color data
@@ -60,6 +53,14 @@ impl FrameBuffer {
         let mut framebuf = Self::new_empty();
         framebuf.resize(width, height, fill_color);
         framebuf
+    }
+
+    pub fn width(&self) -> usize {
+        self.width
+    }
+
+    pub fn height(&self) -> usize {
+        self.height
     }
 
     ///
@@ -184,7 +185,7 @@ pub fn draw_framebuf_to_target<D>(target: &mut D)
 where 
     D: DrawTarget<Color = Rgb888>
 {
-    let mut buf = GLOBAL_FRAMEBUF.lock().unwrap();
+    let buf = GLOBAL_FRAMEBUF.lock().unwrap();
     match target.fill_contiguous(
         &Rectangle::new(
             Point::new(0,0), Size::new(buf.width as u32, buf.height as u32)), buf.iter().map(|p| *p))

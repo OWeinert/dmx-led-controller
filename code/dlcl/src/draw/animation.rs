@@ -1,6 +1,4 @@
-use embedded_graphics::Pixel;
 use embedded_graphics::pixelcolor::Rgb888;
-use crate::rpc::dlcl_rpc::{FrameDto, PixelDto};
 
 ///
 /// The single frame of an animation
@@ -11,7 +9,7 @@ pub struct Frame {
 }
 
 impl Frame {
-    pub fn new(pixels: Vec<Rgb888>, frame_time: usize) -> Self {
+    pub fn new(pixels: Vec<Rgb888>) -> Self {
         let frame = Frame {
             pixels
         };

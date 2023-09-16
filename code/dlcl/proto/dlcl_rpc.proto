@@ -21,7 +21,6 @@ message AnimationDTO {
 
 message FrameDTO {
   repeated PixelDTO pixels = 1;
-  uint32 frame_time = 2;
 }
 
 message PixelDTO {

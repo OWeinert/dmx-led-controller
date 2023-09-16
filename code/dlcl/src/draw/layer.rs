@@ -1,25 +1,18 @@
-use std::any::{Any, TypeId};
-use std::collections::{HashSet, VecDeque};
-use std::ops::Deref;
-use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
+use std::any::Any;
+use std::collections::VecDeque;
 use embedded_graphics::{pixelcolor::Rgb888, prelude::*};
 use iter_tools::Itertools;
-use once_cell::sync::Lazy;
-use std::borrow::BorrowMut;
-use std::cell::OnceCell;
-use embedded_graphics::mono_font::mapping::GlyphMapping;
-use dyn_partial_eq::*;
+use draw::draw_layer;
 use crate::draw;
-use crate::draw::animation::{Animation, Frame};
+use crate::draw::animation::Animation;
 use crate::draw::framebuffer::GLOBAL_FRAMEBUF;
-use crate::draw::layer::LayerType::DirectDraw;
 use crate::rpc::RpcOp;
 use super::framebuffer::FrameBuffer;
 
 ///
 /// Represents a Layer which can be drawn to.
 ///
-pub trait Layer {
+pub trait Layer: Send + Sync {
 
     ///
     /// Prepares the layer for drawing (e.g. modify pixels before drawing, etc.)
@@ -29,7 +22,7 @@ pub trait Layer {
     ///
     /// 'self' - The Layer
     ///
-    fn prep_layer(&mut self);
+    fn prep(&mut self);
 
     ///
     /// Returns true if the Layer sets the color black to be transparent instead of true black
@@ -58,11 +51,16 @@ pub trait Layer {
     fn get_index(&self) -> usize;
 
     fn set_index(&mut self, index: usize);
+
+    fn as_any(&self) -> &dyn Any;
+
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
+#[derive(PartialEq)]
 pub enum LayerType {
-    DirectDraw = "DIRECT_DRAW",
-    Animated = "ANIMATED",
+    DirectDraw,
+    Animated
 }
 
 
@@ -93,17 +91,17 @@ impl DirectDrawLayer {
     ///
     pub fn new(transparent_black: bool,
                framebuf_w: usize, framebuf_h: usize) -> Self {
-        let mut layer = DirectDrawLayer {
+        let layer = DirectDrawLayer {
             framebuf: FrameBuffer::new(framebuf_w, framebuf_h, Rgb888::BLACK),
             transparent_black,
-            index: -1
+            index: 0
         };
         layer
     }
 }
 
 impl Layer for DirectDrawLayer {
-    fn prep_layer(&mut self) {}
+    fn prep(&mut self) {}
 
     fn transparent_black(&self) -> bool {
         self.transparent_black
@@ -123,6 +121,14 @@ impl Layer for DirectDrawLayer {
 
     fn set_index(&mut self, index: usize) {
         self.index = index;
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
 
@@ -158,13 +164,13 @@ impl AnimatedLayer {
     ///
     pub fn new(transparent_black: bool, loop_animations: bool,
            framebuf_h: usize, framebuf_w: usize) -> Self {
-        let mut layer = AnimatedLayer {
+        let layer = AnimatedLayer {
             framebuf: FrameBuffer::new(framebuf_w, framebuf_h, Rgb888::BLACK),
             transparent_black,
             loop_animations,
             animation_queue: VecDeque::new(),
             current_animation: Option::None,
-            index: -1
+            index: 0
         };
         layer
     }
@@ -212,7 +218,7 @@ impl AnimatedLayer {
 }
 
 impl Layer for AnimatedLayer {
-    fn prep_layer(&mut self) {
+    fn prep(&mut self) {
         self.draw_frame();
     }
 
@@ -235,6 +241,14 @@ impl Layer for AnimatedLayer {
     fn set_index(&mut self, index: usize) {
         self.index = index;
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 }
 
 
@@ -243,7 +257,7 @@ impl Layer for AnimatedLayer {
 /// A manager for handling the layers and interactions with them
 ///
 pub struct LayerManager {
-    layers: Vec<&dyn Layer>,
+    layers: Vec<Box<dyn Layer>>,
     rpc_queue: Option<VecDeque<RpcOp>>,
     rpc_enabled: bool
 }
@@ -268,7 +282,6 @@ impl LayerManager {
         else {
             None
         };
-        let fbuf = crate::draw::framebuffer::GLOBAL_FRAMEBUF.lock().unwrap();
         LayerManager {
             layers: vec![],
             rpc_queue,
@@ -298,13 +311,15 @@ impl LayerManager {
     ///
     /// 'Result<(), Err>' - Result containing Errors if the registration failed
     ///
-    pub fn register_layer(&mut self, layer: &mut dyn Layer) -> Result<(), Err> {
+    pub fn register_layer(&mut self, mut layer: impl Layer + 'static) -> Result<(), &str> {
         let global_fbuf = GLOBAL_FRAMEBUF.lock().unwrap();
-        if layer.width() != global_fbuf.width() || layer.height() != global_fbuf.height() {
+        if layer.framebuf().width() != global_fbuf.width()
+            || layer.framebuf().height() != global_fbuf.height() {
+
             return Err("layer framebuffer size mismatch!");
         }
         layer.set_index(self.layers.len());
-        self.layers.push(layer);
+        self.layers.push(Box::new(layer));
         self.sort_layers();
         Ok(())
     }
@@ -315,7 +330,10 @@ impl LayerManager {
     ///
     pub fn update(&mut self) {
         if self.rpc_enabled {
-            self.process_rpc_ops();
+            match self.process_rpc_ops() {
+                Ok(_) => {},
+                Err(msg) => println!("{}", msg)
+            }
         }
         self.push_layers();
     }
@@ -331,12 +349,11 @@ impl LayerManager {
     ///
     /// '&dyn Layer' - Layer reference
     ///
-    pub fn layer_by_ids(&self, id: usize) -> &dyn Layer {
-        self.layers[id]
+    pub fn layer_by_ids(&self, id: usize) -> &Box<dyn Layer> {
+        &self.layers[id]
     }
 
     pub(crate) fn get_anim_layer_ids(&self) -> Vec<usize> {
-        let mut ids: Vec<usize> = vec![];
         let ids = self.layers.iter()
             .filter(|l| l.layer_type() == LayerType::Animated)
             .map(|l| l.get_index())
@@ -347,23 +364,23 @@ impl LayerManager {
     ///
     /// Processes the rpc ops in the queue
     ///
-    fn process_rpc_ops(&mut self) -> Result<(), Err>{
+    fn process_rpc_ops(&mut self) -> Result<(), &str>{
         if !self.rpc_enabled || self.rpc_queue.is_none() {
             return Err("rpc is disabled or the rpc_queue is not initialized!");
         }
 
-        let rpc_queue = self.rpc_queue.unwrap();
+        let rpc_queue = self.rpc_queue.as_mut().unwrap();
         while rpc_queue.len() > 0 {
             let rpc_op = rpc_queue.pop_front().unwrap();
             match rpc_op {
                 RpcOp::DrawDirect(pixels) => {
-                    pixels.iter().foreach(|p| {
+                    pixels.iter().for_each(|p| {
                         draw::draw_pixel_direct(p.0, p.1);
                     });
                 },
                 RpcOp::DrawOnLayer(layer_id, pixels) => {
-                    let mut layer = &mut self.layers[layer_id];
-                    pixels.iter().foreach(|p| {
+                    let layer = self.layers[layer_id].as_mut();
+                    pixels.iter().for_each(|p| {
                         draw::draw_pixel_layer(p.0, p.1, layer);
                     });
                 },
@@ -371,10 +388,12 @@ impl LayerManager {
                     todo!();
                 },
                 RpcOp::PushAnimation(layer_id, anim) => {
-                    let mut layer: AnimatedLayer = &mut self.layers[layer_id] as AnimatedLayer;
+                    let layer: &mut AnimatedLayer = self.layers[layer_id].as_mut()
+                        .as_any_mut()
+                        .downcast_mut::<AnimatedLayer>()
+                        .unwrap();
                     layer.enqueue(anim);
-                },
-                _ => return Err("unhandled RpcOp!")
+                }
             }
         }
         return Ok(());
@@ -388,16 +407,16 @@ impl LayerManager {
     /// * 'rpc_op' - The rpc operation
     ///
     pub(crate) fn push_rpc_op(&mut self, rpc_op: RpcOp) {
-        self.rpc_queue.unwrap().push_back(rpc_op);
+        self.rpc_queue.as_mut().unwrap().push_back(rpc_op);
     }
 
     ///
     /// Pushes the layers of the LayerManager to the global framebuffer
     ///
     fn push_layers(&mut self) {
-        for layer in self.layers {
+        for layer in &mut self.layers {
             layer.prep();
-            draw::draw_layer(layer);
+            draw_layer(layer.as_mut());
         }
     }
 
@@ -405,6 +424,6 @@ impl LayerManager {
     /// Sorts layers by id
     ///
     fn sort_layers(&mut self) {
-        self.layers.sort_by(|a, b| a.get_index().partial_cmp(b.get_index()).unwrap());
+        self.layers.sort_by(|a, b| a.get_index().partial_cmp(&b.get_index()).unwrap());
     }
 }
