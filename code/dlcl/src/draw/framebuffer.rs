@@ -10,11 +10,14 @@ use embedded_graphics::prelude::{Size, RgbColor};
 use embedded_graphics::primitives::Rectangle;
 use embedded_graphics_simulator::sdl2::Keycode::Mute;
 use embedded_graphics_simulator::SimulatorDisplay;
+use iter_tools::Itertools;
 use once_cell::sync::{Lazy, OnceCell};
 use crate::draw;
-use crate::draw::DlclDrawTarget;
 
-#[derive(Clone)]
+///
+/// Represents a framebuffer containing Rgb888 color data
+///
+#[derive(Clone, PartialEq)]
 pub struct FrameBuffer {
     data: Vec<Rgb888>,
     width: usize,
@@ -23,6 +26,7 @@ pub struct FrameBuffer {
 
 impl FrameBuffer {
 
+    ///
     /// Creates a new framebuffer of size 0
     ///
     /// ## Returns
@@ -30,26 +34,35 @@ impl FrameBuffer {
     /// 'Self' - The framebuffer
     ///
     pub fn new_empty() -> Self {
-        let frame_buf = FrameBuffer {
+        let framebuf = FrameBuffer {
             data: vec![],
             width: 0,
             height: 0
         };
-        frame_buf
+        framebuf
     }
-    
-    /*
-    fn new(width: usize, height: usize) -> Self {
-        let size = width * height;
-        let frame_buf = FrameBuffer {
-            data: vec![Rgb888::BLACK; size],
-            width: width,
-            height: height
-        };
-        frame_buf
-    }
-    */
 
+    ///
+    /// Creates a new framebuffer of given *width* and *height*
+    /// filled with the *fill_color*
+    ///
+    /// ## Arguments
+    ///
+    /// *'width' - The framebuffer width
+    /// *'height' - The framebuffer height
+    /// *'fill_color' - The fill color for empty positions
+    ///
+    /// ## Returns
+    ///
+    /// 'Self' - The framebuffer
+    ///
+    pub fn new(width: usize, height: usize, fill_color: Rgb888) -> Self {
+        let mut framebuf = Self::new_empty();
+        framebuf.resize(width, height, fill_color);
+        framebuf
+    }
+
+    ///
     /// Resizes the framebuffer to *new_width* and *new_height*
     /// and fills empty positions with the *fill_color*
     ///
@@ -67,6 +80,13 @@ impl FrameBuffer {
         self.height = new_height;
     }
 
+    ///
+    /// Gets an Iterator over the framebuffer data
+    ///
+    /// ## Returs
+    ///
+    /// 'Iter\<'_, Rgb888\>' - the Iterator
+    ///
     pub fn iter(&self) -> Iter<'_, Rgb888> {
         self.data.iter()
     }
@@ -75,6 +95,7 @@ impl FrameBuffer {
         self.data.fill_with(|| Rgb888::BLACK);
     }
 
+    ///
     /// Sets the *color* at *pos* in the framebuffer
     ///
     /// ## Arguments
@@ -89,10 +110,26 @@ impl FrameBuffer {
         self.data[i] = color;
     }
 
+    ///
+    /// Gets the framebuffer data
+    ///
+    /// ## Returns
+    ///
+    /// '&mut Vec<Rgb888>' - the framebuffer data
+    ///
     pub fn data(&mut self) -> &mut Vec<Rgb888> {
         &mut self.data
     }
 
+    pub(crate) fn set_data(&mut self, new_data: &Vec<Rgb888>) {
+        let mut i = 0;
+        for pixel in new_data {
+            self.data[i] = *pixel;
+            i += 1;
+        }
+    }
+
+    ///
     /// Converts the framebuffer into an iterator containing
     /// the pixels
     ///
@@ -104,7 +141,7 @@ impl FrameBuffer {
     ///
     /// 'IntoIter\<Pixel\<Rgb888\>\>' - The pixel iterator
     ///
-    pub fn to_pixels(&mut self) -> IntoIter<Pixel<Rgb888>>{
+    pub fn to_pixels(&mut self) -> IntoIter<Pixel<Rgb888>> {
         let buf_iter = self.iter();
         let mut i = 0;
         let width: i32 = self.width as i32;
@@ -119,9 +156,12 @@ impl FrameBuffer {
     }
 }
 
+///
 /// The global framebuffer
+///
 pub static GLOBAL_FRAMEBUF: Lazy<Mutex<FrameBuffer>> = Lazy::new(|| Mutex::new(FrameBuffer::new_empty()));
 
+///
 /// Sets the size of the frame buffer
 /// 
 /// ## Arguments
@@ -133,6 +173,7 @@ pub fn set_framebuf_size(width: usize, height: usize) {
     GLOBAL_FRAMEBUF.lock().unwrap().resize(width, height, Rgb888::BLACK);
 }
 
+///
 /// Draws the frame buffer to the *target*
 /// 
 /// ## Arguments
@@ -153,6 +194,7 @@ where
     };
 }
 
+///
 /// Clears the frame buffer
 /// 
 pub fn clear_framebuf() {

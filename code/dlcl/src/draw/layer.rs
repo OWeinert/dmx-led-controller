@@ -1,75 +1,337 @@
-use std::sync::{Mutex, MutexGuard};
+use std::any::{Any, TypeId};
+use std::collections::{HashSet, VecDeque};
+use std::ops::Deref;
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 use embedded_graphics::{pixelcolor::Rgb888, prelude::*};
-
+use iter_tools::Itertools;
 use once_cell::sync::Lazy;
-
+use std::borrow::BorrowMut;
+use std::cell::OnceCell;
+use embedded_graphics::mono_font::mapping::GlyphMapping;
+use dyn_partial_eq::*;
+use crate::draw;
+use crate::draw::animation::{Animation, Frame};
+use crate::draw::framebuffer::GLOBAL_FRAMEBUF;
+use crate::draw::layer::LayerType::DirectDraw;
+use crate::rpc::RpcOp;
 use super::framebuffer::FrameBuffer;
 
-pub struct Layer {
-    layer_mode: LayerMode,
-    draw_order: u8,
-    transparent_black: bool,
-    framebuf: Lazy<Mutex<FrameBuffer>>
+///
+/// Represents a Layer which can be drawn to.
+///
+pub trait Layer {
+
+    ///
+    /// Prepares the layer for drawing (e.g. modify pixels before drawing, etc.)
+    /// Function highly depends on the Layer implmentation.
+    ///
+    /// ## Arguments
+    ///
+    /// 'self' - The Layer
+    ///
+    fn prep_layer(&mut self);
+
+    ///
+    /// Returns true if the Layer sets the color black to be transparent instead of true black
+    ///
+    /// ## Returns
+    ///
+    /// 'bool' -
+    ///
+    fn transparent_black(&self) -> bool;
+
+    ///
+    /// Gets the Layer's framebuffer
+    ///
+    /// ## Returns
+    ///
+    /// '&mut FrameBuffer' - The framebuffer
+    ///
+    fn framebuf(&mut self) -> &mut FrameBuffer;
+
+    ///
+    /// Gets the layer's LayerType
+    ///
+    fn layer_type(&self) -> LayerType;
+
+
+    fn get_index(&self) -> usize;
+
+    fn set_index(&mut self, index: usize);
 }
 
-impl Layer {
-    pub fn layer_mode(&self) -> LayerMode {
-        self.layer_mode
+pub enum LayerType {
+    DirectDraw = "DIRECT_DRAW",
+    Animated = "ANIMATED",
+}
+
+
+
+///
+/// Represents a Layer which can be drawn to directly
+///
+pub struct DirectDrawLayer {
+    framebuf: FrameBuffer,
+    transparent_black: bool,
+    index: usize,
+}
+
+impl DirectDrawLayer {
+
+    ///
+    /// Creates a new DirectDrawLayer
+    ///
+    /// ## Arguments
+    ///
+    /// *'transparent_black' - If the Layer should render the color black as transparent
+    /// *'framebuf_w' - The framebuffer width
+    /// *'framebuf_h' - The framebuffer height
+    ///
+    /// ## Returns
+    ///
+    /// 'Self' - The DirectDrawLayer
+    ///
+    pub fn new(transparent_black: bool,
+               framebuf_w: usize, framebuf_h: usize) -> Self {
+        let mut layer = DirectDrawLayer {
+            framebuf: FrameBuffer::new(framebuf_w, framebuf_h, Rgb888::BLACK),
+            transparent_black,
+            index: -1
+        };
+        layer
+    }
+}
+
+impl Layer for DirectDrawLayer {
+    fn prep_layer(&mut self) {}
+
+    fn transparent_black(&self) -> bool {
+        self.transparent_black
+    }
+    
+    fn framebuf(&mut self) -> &mut FrameBuffer {
+        &mut self.framebuf
     }
 
-    pub fn set_layer_mode(& mut self, layer_mode: LayerMode) {
-        self.layer_mode = layer_mode;
+    fn layer_type(&self) -> LayerType {
+        LayerType::DirectDraw
     }
 
-    pub fn draw_order(&self) -> u8 {
-        self.draw_order
+    fn get_index(&self) -> usize {
+        self.index
     }
 
-    pub fn set_draw_order(&mut self, draw_order: u8) {
-        self.draw_order = draw_order
+    fn set_index(&mut self, index: usize) {
+        self.index = index;
+    }
+}
+
+
+
+///
+/// Represens a Layer which plays given animations from an animation queue
+///
+pub struct AnimatedLayer {
+    framebuf: FrameBuffer,
+    transparent_black: bool,
+    loop_animations: bool,
+    animation_queue: VecDeque<Animation>,
+    current_animation: Option<Animation>,
+    index: usize
+}
+
+impl AnimatedLayer {
+
+    ///
+    /// Creates a new AnimatedLayer
+    ///
+    /// ## Arguments
+    ///
+    /// *'transparent_black' - If the Layer should render the color black as transparent
+    /// *'loop_animations' - If the animation queue should loop
+    /// *'framebuf_w' - The framebuffer width
+    /// *'framebuf_h' - The framebuffer height
+    ///
+    /// ## Returns
+    ///
+    /// 'Self' - The AnimatedLayer
+    ///
+    pub fn new(transparent_black: bool, loop_animations: bool,
+           framebuf_h: usize, framebuf_w: usize) -> Self {
+        let mut layer = AnimatedLayer {
+            framebuf: FrameBuffer::new(framebuf_w, framebuf_h, Rgb888::BLACK),
+            transparent_black,
+            loop_animations,
+            animation_queue: VecDeque::new(),
+            current_animation: Option::None,
+            index: -1
+        };
+        layer
     }
 
-    pub fn transparent_black(&self) -> bool {
+    fn draw_frame(&mut self) {
+        // load next animation when no animation is loaded or the current loaded is one finished
+        if self.current_animation.is_none()
+            || (self.current_animation.is_some()
+            && self.current_animation.clone().unwrap().frame_index() >= self.current_animation.as_mut().unwrap().len()) {
+            self.next_animation();
+        }
+        let animation = self.current_animation.as_mut().unwrap();
+
+        // get next frame and draw it's pixels to the framebuffer
+        let frame = animation.next_frame();
+        self.framebuf.set_data(&frame.pixels());
+    }
+
+    pub fn enqueue(&mut self, animation: Animation) {
+        self.animation_queue.push_back(animation.clone());
+    }
+
+    fn dequeue(&mut self) -> Animation {
+        self.animation_queue.pop_back().unwrap()
+    }
+
+    fn next_animation(&mut self) {
+        self.current_animation = Some(self.dequeue());
+        if self.loop_animations {
+            self.enqueue(self.current_animation.clone().unwrap());
+        }
+    }
+}
+
+impl Layer for AnimatedLayer {
+    fn prep_layer(&mut self) {
+        self.draw_frame();
+    }
+
+    fn transparent_black(&self) -> bool {
         self.transparent_black
     }
 
-    pub fn set_transparent_black(&mut self, transparent_black: bool) {
-        self.transparent_black = transparent_black
+    fn framebuf(&mut self) -> &mut FrameBuffer {
+        &mut self.framebuf
     }
 
-    pub fn framebuf(&self) -> MutexGuard<'_, FrameBuffer> {
-        self.framebuf.lock().unwrap()
+    fn layer_type(&self) -> LayerType {
+        LayerType::Animated
     }
 
-    pub fn set_size(&mut self, width: usize, height: usize) {
-        self.framebuf().resize(width, height, Rgb888::BLACK);
+    fn get_index(&self) -> usize {
+        self.index
     }
- }
 
-#[derive(Copy, Clone)]
-pub enum LayerMode {
-    DirectDraw,
-    Animated,
-    Script
+    fn set_index(&mut self, index: usize) {
+        self.index = index;
+    }
 }
 
-pub static DEFAULT_LAYER_0: Lazy<Mutex<Layer>> = Lazy::new(|| Mutex::new(Layer {
-    layer_mode: LayerMode::DirectDraw,
-    draw_order: 0,
-    transparent_black: false,
-    framebuf: Lazy::new(|| Mutex::new(FrameBuffer::new_empty()))
-}));
 
-pub static DEFAULT_LAYER_1: Lazy<Mutex<Layer>> = Lazy::new(|| Mutex::new(Layer {
-    layer_mode: LayerMode::DirectDraw,
-    draw_order: 1,
-    transparent_black: true,
-    framebuf: Lazy::new(|| Mutex::new(FrameBuffer::new_empty()))
-}));
 
-pub static DEFAULT_LAYER_2: Lazy<Mutex<Layer>> = Lazy::new(|| Mutex::new(Layer {
-    layer_mode: LayerMode::Animated,
-    draw_order: 2,
-    transparent_black: true,
-    framebuf: Lazy::new(|| Mutex::new(FrameBuffer::new_empty()))
-}));
+pub struct LayerManager {
+    layers: Vec<&dyn Layer>,
+    rpc_queue: Option<VecDeque<RpcOp>>,
+    rpc_enabled: bool
+}
+
+impl LayerManager {
+    pub fn new(rpc_enabled: bool) -> Self {
+        let rpc_queue: Option<VecDeque<RpcOp>> = if rpc_enabled {
+            Some(VecDeque::new())
+        }
+        else {
+            None
+        };
+        let fbuf = crate::draw::framebuffer::GLOBAL_FRAMEBUF.lock().unwrap();
+        LayerManager {
+            layers: vec![],
+            rpc_queue,
+            rpc_enabled
+        }
+    }
+
+    pub fn rpc_enabled(&self) -> bool {
+        self.rpc_enabled
+    }
+
+    pub fn register_layer(&mut self, layer: &mut dyn Layer) -> Result<(), Err> {
+        let global_fbuf = GLOBAL_FRAMEBUF.lock().unwrap();
+        if layer.width() != global_fbuf.width() || layer.height() != global_fbuf.height() {
+            return Err("layer framebuffer size mismatch!");
+        }
+        layer.set_index(self.layers.len());
+        self.layers.push(layer);
+        self.sort_layers();
+        Ok(())
+    }
+
+    pub fn update(&mut self) {
+        if self.rpc_enabled {
+            self.process_rpc_ops();
+        }
+        self.push_layers();
+    }
+
+    pub fn layer_by_ids(&self, id: usize) -> &dyn Layer {
+        self.layers[id]
+    }
+
+    pub(crate) fn get_anim_layer_ids(&self) -> Vec<usize> {
+        let mut ids: Vec<usize> = vec![];
+        let ids = self.layers.iter()
+            .filter(|l| l.layer_type() == LayerType::Animated)
+            .map(|l| l.get_index())
+            .collect_vec();
+        ids
+    }
+
+
+    fn process_rpc_ops(&mut self) -> Result<(), Err>{
+        if !self.rpc_enabled || self.rpc_queue.is_none() {
+            return Err("rpc is disabled or the rpc_queue is not initialized!");
+        }
+
+        let rpc_queue = self.rpc_queue.unwrap();
+        while rpc_queue.len() > 0 {
+            let rpc_op = rpc_queue.pop_front().unwrap();
+            match rpc_op {
+                RpcOp::DrawDirect(pixels) => {
+                    pixels.iter().foreach(|p| {
+                        draw::draw_pixel_direct(p.0, p.1);
+                    });
+                },
+                RpcOp::DrawOnLayer(layer_id, pixels) => {
+                    let mut layer = &mut self.layers[layer_id];
+                    pixels.iter().foreach(|p| {
+                        draw::draw_pixel_layer(p.0, p.1, layer);
+                    });
+                },
+                RpcOp::DrawFullLayer(layer_id, frame) => {
+                    todo!();
+                },
+                RpcOp::PushAnimation(layer_id, anim) => {
+                    let mut layer: AnimatedLayer = &mut self.layers[layer_id] as AnimatedLayer;
+                    layer.enqueue(anim);
+                },
+                _ => return Err("unhandled RpcOp!")
+            }
+        }
+        return Ok(());
+    }
+
+    pub(crate) fn push_rpc_op(&mut self, rpc_op: RpcOp) {
+        self.rpc_queue.unwrap().push_back(rpc_op);
+    }
+
+    fn push_layers(&mut self) {
+        for layer in self.layers {
+            layer.prep();
+            draw::draw_layer(layer);
+        }
+    }
+
+    fn sort_layers(&mut self) {
+        self.layers.sort_by(|a, b| a.get_index().partial_cmp(b.get_index()).unwrap());
+    }
+
+
+}
