@@ -2,6 +2,8 @@ pub mod dlcl_rpc {
     tonic::include_proto!("dlcl_rpc");
 }
 
+use std::error::Error;
+use std::sync::Mutex;
 use embedded_graphics::Pixel;
 use embedded_graphics::pixelcolor::Rgb888;
 use iter_tools::Itertools;
@@ -21,6 +23,16 @@ impl Into<Frame> for FrameDto {
     }
 }
 
+impl Into<Animation> for AnimationDto {
+    fn into(self) -> Animation {
+        let frames = self.frames.iter()
+            .map(|dto| (*dto).clone().into())
+            .collect_vec();
+        let anim = Animation::from_frames(frames);
+        anim
+    }
+}
+
 
 pub enum RpcOp {
     DrawDirect(Vec<Pixel<Rgb888>>),
@@ -29,14 +41,16 @@ pub enum RpcOp {
     PushAnimation (usize, Animation)
 }
 
-pub struct DlclDrawService<'a> {
-    layer_manager: &'a LayerManager
+pub struct DlclDrawService {
+    layer_manager: Mutex<LayerManager>
 }
 
 #[tonic::async_trait]
-impl DlclDraw for DlclDrawService<'static> {
+impl DlclDraw for DlclDrawService {
     async fn get_animated_layers(&self, _request: Request<EmptyRequest>) -> Result<Response<AnimatedLayersResponse>, Status> {
-        let layers = self.layer_manager.get_anim_layer_ids().iter()
+        let layers = self.layer_manager.lock().unwrap()
+            .get_anim_layer_ids()
+            .iter()
             .map(|i| {
                 let i_u32: u32 = *i as u32;
                 i_u32
@@ -50,23 +64,29 @@ impl DlclDraw for DlclDrawService<'static> {
 
     async fn push_animations(&self, request: Request<Streaming<AnimationDto>>) -> Result<Response<StatusResponse>, Status> {
         let mut stream = request.into_inner();
-
-        let mut status = DlclStatus::Success;
-        let mut message = "";
-
-        while let Some(animation) = stream.next().await {
-            let animation = animation?;
-            todo!();
+        let proc = |anim_dto: Result<AnimationDto, Status>| -> Result<(), Box<dyn Error>> {
+            let anim_dto = anim_dto?;
+            let anim = anim_dto.clone().into();
+            let rpc_op = RpcOp::PushAnimation(anim_dto.layer as usize, anim);
+            self.layer_manager.lock().unwrap()
+                .push_rpc_op(rpc_op);
+            Ok(())
+        };
+        while let Some(anim_dto) = stream.next().await {
+            match proc(anim_dto) {
+                Ok(()) => {},
+                Err(err) => println!("Error while handling PushAnimation request: {}", err)
+            }
         }
 
         let response = StatusResponse {
-            status: status.into(),
-            message: String::from(message)
+            status: DlclStatus::Success.into(),
+            message: String::from("")
         };
         Ok(Response::new(response))
     }
 }
 
-impl DlclDrawService<'_> {
+impl DlclDrawService {
     // todo
 }
