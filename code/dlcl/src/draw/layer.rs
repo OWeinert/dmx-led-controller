@@ -385,7 +385,8 @@ impl LayerManager {
                     });
                 },
                 RpcOp::DrawFullLayer(layer_id, frame) => {
-                    todo!();
+                    let layer = self.layers[layer_id].as_mut();
+                    draw::draw_frame_layer(&frame, layer);
                 },
                 RpcOp::PushAnimation(layer_id, anim) => {
                     let layer: &mut AnimatedLayer = self.layers[layer_id].as_mut()
@@ -407,7 +408,9 @@ impl LayerManager {
     /// * 'rpc_op' - The rpc operation
     ///
     pub(crate) fn push_rpc_op(&mut self, rpc_op: RpcOp) {
-        self.rpc_queue.as_mut().unwrap().push_back(rpc_op);
+        self.rpc_queue.as_mut()
+            .unwrap()
+            .push_back(rpc_op);
     }
 
     ///
