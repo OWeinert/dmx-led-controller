@@ -88,5 +88,12 @@ impl DlclDraw for DlclDrawService {
 }
 
 impl DlclDrawService {
-    // todo
+
+    pub fn new<F>(layer_manager: Mutex<LayerManager>) -> DlclDrawService {
+        let service = DlclDrawService {
+            layer_manager
+        };
+        service
+    }
+
 }
