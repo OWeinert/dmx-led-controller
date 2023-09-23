@@ -33,20 +33,9 @@ pub trait Layer: Send + Sync {
     ///
     fn transparent_black(&self) -> bool;
 
-    ///
-    /// Gets the Layer's framebuffer
-    ///
-    /// ## Returns
-    ///
-    /// '&mut FrameBuffer' - The framebuffer
-    ///
     fn framebuf(&mut self) -> &mut FrameBuffer;
 
-    ///
-    /// Gets the layer's LayerType
-    ///
     fn layer_type(&self) -> LayerType;
-
 
     fn get_index(&self) -> usize;
 
@@ -353,6 +342,13 @@ impl LayerManager {
         &self.layers[id]
     }
 
+    ///
+    /// Returns the layer ids of all animated layers
+    ///
+    /// ## Returns
+    ///
+    /// 'Vec\<usize\>' - The layer ids
+    ///
     pub(crate) fn get_anim_layer_ids(&self) -> Vec<usize> {
         let ids = self.layers.iter()
             .filter(|l| l.layer_type() == LayerType::Animated)
@@ -362,7 +358,7 @@ impl LayerManager {
     }
 
     ///
-    /// Processes the rpc ops in the queue
+    /// Processes the RpcOps in the queue
     ///
     fn process_rpc_ops(&mut self) -> Result<(), &str>{
         if !self.rpc_enabled || self.rpc_queue.is_none() {
@@ -401,7 +397,7 @@ impl LayerManager {
     }
 
     ///
-    /// Push an rpc operation to the queue
+    /// Push an RpcOp to the queue
     ///
     /// ## Arguments
     ///
