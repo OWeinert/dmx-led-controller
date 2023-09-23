@@ -101,6 +101,20 @@ pub fn draw_circle_layer(top_left: Point, diameter: u32, style: PrimitiveStyle<R
             buf.set_pixel_color(p.0, p.1);
         });
 }
+
+///
+/// Draws a *frame* (in the form of a vector of Rgb888 colors) to the *layer*
+///
+/// ## Arguments
+///
+/// * 'frame' - The frame data
+/// * 'layer' - The layer
+///
+pub fn draw_frame_layer(frame: &Vec<Rgb888>, layer: &mut dyn Layer) {
+    let buf = layer.framebuf();
+    buf.set_data(frame);
+}
+
 /// Draws a *layer* to the global framebuffer
 ///
 /// ## Arguments
