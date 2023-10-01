@@ -9,10 +9,9 @@ service DlclDraw {
 
 enum DlclStatus {
   SUCCESS = 0;
-  ERROR_UNDEFINED = 1;
-  ERROR_INVALID_MODEL = 2;
-  ERROR_INVALID_REQUEST = 3;
-  ERROR_FULL_QUEUE = 4;
+  ERORR_INVALID_MODEL = 1;
+  ERROR_INVALID_REQUEST = 2;
+  ERROR_FULL_QUEUE = 3;
 }
 
 message AnimationDTO {
