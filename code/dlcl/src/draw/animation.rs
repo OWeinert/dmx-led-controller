@@ -31,6 +31,15 @@ pub struct Animation {
 }
 
 impl Animation {
+
+    pub fn from_frames(frames: Vec<Frame>) -> Self {
+        let anim = Animation {
+            frames,
+            frame_index: 0,
+        };
+        anim
+    }
+
     pub fn frame_index(&self) -> usize {
         self.frame_index
     }
