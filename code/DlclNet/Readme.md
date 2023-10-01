@@ -1,1 +1,1 @@
-A .NET library for interaction with the DLCL host via gRpc
+A .NET library for creation of a gRPC client connected to a DLCL gRPC server
