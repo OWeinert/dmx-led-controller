@@ -1,8 +1,0 @@
-{
-    "rust-analyzer.linkedProjects": [
-        "./code/dlcl/Cargo.toml",
-        "./code/display/Cargo.toml",
-        "./code/display/Cargo.toml"
-    ],
-    "rust-analyzer.showUnlinkedFileNotification": false
-}
