@@ -25,6 +25,7 @@ case "${1-""}" in
         ;;
     # simulate on pc
     -s|--simulate)
+        cargo build --bin simulate-display --features "embedded-graphics-simulator" --no-default-features
         cargo run --bin simulate-display --no-default-features --features="embedded-graphics-simulator"
         ;;
     # start gdbserver on rpi for remote debugging

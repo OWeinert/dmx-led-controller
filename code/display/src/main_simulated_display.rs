@@ -1,20 +1,22 @@
-use core::time;
-//use std::time::Instant;
-use std::thread;
-use std::env;
+use std::net::SocketAddr;
+use std::sync::{Arc, Mutex};
 
 use cascade::cascade;
-use embedded_graphics::{pixelcolor::Rgb888, prelude::*, primitives::PrimitiveStyle};
-use embedded_graphics_simulator::{
-    sdl2::Keycode, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
-};
+use embedded_graphics::pixelcolor::Rgb888;
+use embedded_graphics::prelude::*;
+use embedded_graphics_simulator::{OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window};
 
-use dlcl::py_interop;
-use dlcl::draw::{self, framebuffer, layer};
-use relative_path::RelativePath;
-use dlcl::draw::layer::{DEFAULT_LAYER_0, DEFAULT_LAYER_1};
+use dlcl::draw::framebuffer;
+use dlcl::draw::layer::LayerManager;
+use dlcl::rpc::dlcl_rpc::dlcl_draw_server::DlclDrawServer;
+use dlcl::rpc::DlclDrawService;
+use dlcl::tonic::transport::server::Server;
+use hyper::server::conn::Http;
+use tokio::net::TcpListener;
+use tokio::time;
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let disp_width = 64;
     let disp_height = 64;
 
@@ -28,44 +30,23 @@ fn main() {
         ..update(&display);
     };
 
-    /*
-    let str = [
-        "assets/objects/cube.obj",
-        "assets/objects/video_ship.obj",
-        "assets/objects/teapot.obj",
-    ];
-    */
-    //let mut last: Instant = Instant::now();
-
-    // load the py_interop script "interop_test.py" from the given relative path
-    let root = env::current_dir().unwrap();
-    let py_path_rel = RelativePath::new("../py_interop/interop_test.py");
-    let py_path = py_path_rel.to_logical_path(&root);
-    let py_script = py_interop::load_py_script(py_path.as_path());
-
-    // call the setup method on the script
-    let _ = py_interop::call_setup(&py_script);
-
     framebuffer::set_framebuf_size(disp_width as usize, disp_height as usize);
-    DEFAULT_LAYER_0.lock().unwrap().set_size(disp_width as usize, disp_height as usize);
-    DEFAULT_LAYER_1.lock().unwrap().set_size(disp_width as usize, disp_height as usize);
+
+    let layer_mgr = LayerManager::new(true);
+    let dlcl_service = DlclDrawService::new(Mutex::new(layer_mgr));
+
+    let address: SocketAddr = "127.0.0.1:50051".parse()?;
+    let server_service = Server::builder()
+        .add_service(DlclDrawServer::new(dlcl_service))
+        .into_service();
+
+    let mut http = Http::new();
+    http.http2_only(true);
+
+    let listener = TcpListener::bind(address).await?;
 
     'running: loop {
-        //let now = Instant::now();
-        /* 
-        let mut parameter_3d_engine =
-            views::render_engine_with_dmx_overlay::render_engine::Parameter {
-                eye: Default::default(),
-                rotation: 0.01,
-                elapsed_time: now - last,
-                print_state: false,
-                rgb: [
-                    parameter_dmx.dmx_output.channels[0] as f32 / 255.0,
-                    parameter_dmx.dmx_output.channels[1] as f32 / 255.0,
-                    parameter_dmx.dmx_output.channels[2] as f32 / 255.0,
-                ],
-            };
-        */
+// handle window events
 
         for event in window.events() {
             match event {
@@ -73,33 +54,31 @@ fn main() {
                 _ => {}
             }
         }
+        // get tpc connections
+        let (conn, addr) = match listener.accept().await {
+            Ok(incoming) => incoming,
+            Err(e) => {
+                eprintln!("Error accepting connection: {}", e);
+                continue;
+            }
+        };
 
-        /*
-        //let props = match parameter_dmx.dmx_output.channels[99] {
-        let props = Views::RenderEngine(RenderEngineProps {
-            parameter_render_engine: parameter_3d_engine,
-            parameter_dmx_channels: parameter_dmx.clone(),
-        });
-        view.on_user_update(&mut display, props);
-        */
+        // serve gRPC service http connection to connected tcp clients
+        let http = http.clone();
+        let service = server_service.clone();
 
-        //py_interop::call_loop(&py_script);
+        tokio::spawn(async move {
+            let svc = tower::ServiceBuilder::new()
+                .service(service);
 
-        draw::draw_circle_layer(Point::new(8,8),
-                                16,
-                                PrimitiveStyle::with_fill(Rgb888::RED),
-                                &layer::DEFAULT_LAYER_0.lock().unwrap());
-        draw::draw_circle_layer(Point::new(16,8),
-                                16,
-                                PrimitiveStyle::with_stroke(Rgb888::BLUE, 1),
-                                &layer::DEFAULT_LAYER_1.lock().unwrap());
-
-        draw::draw_layers(&mut [&DEFAULT_LAYER_0.lock().unwrap(), &DEFAULT_LAYER_1.lock().unwrap()]);
-        framebuffer::draw_framebuf_to_target(&mut display);
+            http.serve_connection(conn, svc).await.unwrap();
+        }).await.unwrap();
 
         window.update(&display);
         display.clear(Rgb888::new(0, 0, 0)).unwrap();
         framebuffer::clear_framebuf();
-        thread::sleep(time::Duration::from_micros(16666));
+        time::sleep(time::Duration::from_micros(16666)).await;
     }
+
+    Ok(())
 }

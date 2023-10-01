@@ -125,11 +125,14 @@ impl DlclDrawService {
     ///
     /// 'Self' - The DlclDrawService
     ///
-    pub fn new<F>(layer_manager: Mutex<LayerManager>) -> DlclDrawService {
+    pub fn new(layer_manager: Mutex<LayerManager>) -> DlclDrawService {
         let service = DlclDrawService {
             layer_manager
         };
         service
     }
 
+    pub fn layer_manager(&self) -> &Mutex<LayerManager> {
+        &self.layer_manager
+    }
 }
