@@ -1,5 +1,7 @@
-﻿using DlclRpc;
+﻿using DlclNet.Extensions;
+using DlclRpc;
 using DlclNet.Models;
+using Grpc.Core;
 using Grpc.Net.Client;
 
 namespace DlclNet;
@@ -41,5 +43,40 @@ public class DlclClient
         }
         var response = await call;
         return response;
+    }
+
+    [Obsolete("Not yet implemented!")]
+    public async Task<StatusResponse> DrawOnLayer(IEnumerable<Pixel> pixels, uint layerId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+    
+    [Obsolete("Not yet implemented!")]
+    public async Task<StatusResponse> DrawFullLayer(Frame frame, uint layerId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+    
+    [Obsolete("Not yet implemented!")]
+    public async Task<StatusResponse> DrawDirect(IEnumerable<Pixel> pixels, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Retrieves a List of all Animations currently in the Animation Queue
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public async Task<List<Animation>> GetAnimationQueueAsync(CancellationToken cancellationToken = default)
+    {
+        var dtos = new List<AnimationDTO>();
+        using var call = _dlclDrawClient.GetAnimationQueue(new EmptyRequest(), cancellationToken: cancellationToken);
+        await foreach (var dto in call.ResponseStream.ReadAllAsync(cancellationToken))
+        {
+            dtos.Add(dto);
+        }
+        var animations = dtos.ConvertAll(dto => dto.ToAnimation());
+        return animations;
     }
 }
