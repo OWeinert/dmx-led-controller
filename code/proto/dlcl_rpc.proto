@@ -5,6 +5,14 @@ service DlclDraw {
   rpc GetAnimatedLayers(EmptyRequest) returns (AnimatedLayersResponse);
 
   rpc PushAnimations(stream AnimationDTO) returns (StatusResponse);
+
+  rpc DrawOnLayer(stream LayerPixelDTO) returns (StatusResponse);
+
+  rpc DrawFullLayer(FrameDTO) returns (StatusResponse);
+
+  rpc DrawDirect(stream PixelDTO) returns (StatusResponse);
+
+  rpc GetAnimationQueue(EmptyRequest) returns (stream AnimationDTO);
 }
 
 enum DlclStatus {
@@ -12,6 +20,7 @@ enum DlclStatus {
   ERORR_INVALID_MODEL = 1;
   ERROR_INVALID_REQUEST = 2;
   ERROR_FULL_QUEUE = 3;
+  ERROR_UNDEFINED = 4;
 }
 
 message AnimationDTO {
@@ -29,6 +38,11 @@ message PixelDTO {
   uint32 r = 3;
   uint32 g = 4;
   uint32 b = 5;
+}
+
+message LayerPixelDTO {
+  repeated PixelDTO pixels = 1;
+  uint32 layer = 2;
 }
 
 message AnimatedLayersResponse {
