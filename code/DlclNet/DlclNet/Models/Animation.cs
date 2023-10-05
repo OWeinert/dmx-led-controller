@@ -17,4 +17,16 @@ public struct Animation : IDTODerivable<AnimationDTO>
 
         return dto;
     }
+
+    public Animation AddFrame(Frame frame)
+    {
+        Frames.Add(frame);
+        return this;
+    }
+    
+    public Animation AddFrames(IEnumerable<Frame> frames)
+    {
+        Frames.AddRange(frames);
+        return this;
+    }
 }
