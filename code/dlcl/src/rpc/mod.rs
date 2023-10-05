@@ -5,15 +5,16 @@ pub mod dlcl_rpc {
 use std::error::Error;
 use std::sync::Mutex;
 use std::io::Write;
+use std::pin::Pin;
 use embedded_graphics::Pixel;
 use embedded_graphics::pixelcolor::Rgb888;
 use iter_tools::Itertools;
-use tokio_stream::StreamExt;
+use tokio_stream::{Stream, StreamExt};
 use tonic::{Request, Response, Status, Streaming};
 use dlcl_rpc::dlcl_draw_server::DlclDraw;
 use crate::draw::animation::{Animation, Frame};
 use crate::draw::layer::LayerManager;
-use crate::rpc::dlcl_rpc::{AnimatedLayersResponse, AnimationDto, DlclStatus, EmptyRequest, FrameDto, StatusResponse};
+use crate::rpc::dlcl_rpc::{AnimatedLayersResponse, AnimationDto, DlclStatus, EmptyRequest, FrameDto, StatusResponse, LayerPixelDto, PixelDto};
 
 impl Into<Frame> for FrameDto {
     fn into(self) -> Frame {
@@ -109,6 +110,24 @@ impl DlclDraw for DlclDrawService {
             message: message
         };
         Ok(Response::new(response))
+    }
+
+    async fn draw_on_layer(&self, request: Request<Streaming<LayerPixelDto>>) -> Result<Response<StatusResponse>, Status> {
+        todo!()
+    }
+
+    async fn draw_full_layer(&self, request: Request<FrameDto>) -> Result<Response<StatusResponse>, Status> {
+        todo!()
+    }
+
+    async fn draw_direct(&self, request: Request<Streaming<PixelDto>>) -> Result<Response<StatusResponse>, Status> {
+        todo!()
+    }
+
+    type GetAnimationQueueStream = Pin<Box<dyn Stream<Item = std::result::Result<AnimationDto, tonic::Status>> + Send + 'static>>;
+
+    async fn get_animation_queue(&self, request: Request<EmptyRequest>) -> Result<Response<Self::GetAnimationQueueStream>, Status> {
+        todo!()
     }
 }
 
