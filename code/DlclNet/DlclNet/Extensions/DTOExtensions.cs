@@ -7,7 +7,10 @@ public static class DTOExtensions
 {
     public static Animation ToAnimation(this AnimationDTO dto)
     {
-        var frames = dto.Frames.ToList().ConvertAll(f => f.ToFrame());
+        var frames = dto.Frames.ToList()
+            .ConvertAll(f => f.ToFrame())
+            .Cast<IFrame>()
+            .ToList();
         var anim = new Animation
         {
             Layer = dto.Layer,
@@ -16,10 +19,10 @@ public static class DTOExtensions
         return anim;
     }
 
-    public static Frame ToFrame(this FrameDTO dto)
+    public static SingleFrame ToFrame(this FrameDTO dto)
     {
         var pixels = dto.Pixels.ToList().ConvertAll(p => p.ToPixel());
-        var frame = new Frame
+        var frame = new SingleFrame
         {
             Pixels = pixels
         };

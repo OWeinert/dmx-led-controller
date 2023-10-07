@@ -29,7 +29,9 @@ public sealed class DlclClientService : IDlclClientService
 
             if (string.IsNullOrWhiteSpace(address))
             {
-                throw new ArgumentException("Address configuration value is empty!");
+                const string msg = "Address configuration value is empty!";
+                _logger.LogError("{}", msg);
+                throw new ArgumentException(msg);
             }
             _client = new DlclClient(address!);
         }

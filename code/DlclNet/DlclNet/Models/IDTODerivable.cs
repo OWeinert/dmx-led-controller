@@ -1,6 +1,6 @@
 namespace DlclNet.Models;
 
-public interface IDTODerivable<T>
+public interface IDtoDerivable<out T>
 {
-    public T ToDTO();
+    public T ToDto();
 }
