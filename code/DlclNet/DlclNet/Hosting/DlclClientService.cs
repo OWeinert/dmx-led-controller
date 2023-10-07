@@ -56,11 +56,63 @@ public sealed class DlclClientService : IDlclClientService
         }
     }
 
-    public async Task<StatusResponse> PushAnimationsAsync(List<Animation> animations, CancellationToken cancellationToken = default)
+    public async Task<StatusResponse> PushAnimationsAsync(IEnumerable<Animation> animations, CancellationToken cancellationToken = default)
     {
         try
         {
             return await _client.PushAnimationsAsync(animations, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("{}", ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<StatusResponse> DrawOnLayerAsync(IEnumerable<Pixel> pixels, uint layerId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _client.DrawOnLayerAsync(pixels, layerId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("{}", ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<StatusResponse> DrawFullLayerAsync(SingleFrame frame, uint layerId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _client.DrawFullLayerAsync(frame, layerId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("{}", ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<StatusResponse> DrawDirectAsync(IEnumerable<Pixel> pixels, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _client.DrawDirectAsync(pixels, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("{}", ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<List<Animation>> GetAnimationQueueAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _client.GetAnimationQueueAsync(cancellationToken);
         }
         catch (Exception ex)
         {
