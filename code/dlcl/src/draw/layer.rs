@@ -338,8 +338,24 @@ impl LayerManager {
     ///
     /// '&dyn Layer' - Layer reference
     ///
-    pub fn layer_by_ids(&self, id: usize) -> &Box<dyn Layer> {
-        &self.layers[id]
+    pub fn layer_by_id(&mut self, id: usize) -> &mut Box<dyn Layer> {
+        &mut self.layers[id]
+    }
+
+    ///
+    /// Checks if a layer with the given *id* exists
+    ///
+    /// ## Arguments
+    ///
+    /// * 'id' - The layer's id
+    ///
+    /// ## Returns
+    ///
+    /// * 'bool' - True if the layer exists
+    ///
+    pub fn layer_exists(&self, id: usize) -> bool {
+        // if the id is less than the layers vector's length than the layer must exist
+        self.layers.len() < id
     }
 
     ///

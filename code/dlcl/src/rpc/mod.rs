@@ -8,10 +8,13 @@ use std::io::Write;
 use std::pin::Pin;
 use embedded_graphics::Pixel;
 use embedded_graphics::pixelcolor::Rgb888;
+use embedded_graphics::prelude::Point;
 use iter_tools::Itertools;
 use tokio_stream::{Stream, StreamExt};
 use tonic::{Request, Response, Status, Streaming};
 use dlcl_rpc::dlcl_draw_server::DlclDraw;
+use unbox_box::BoxExt as _;
+use crate::draw;
 use crate::draw::animation::{Animation, Frame};
 use crate::draw::layer::LayerManager;
 use crate::rpc::dlcl_rpc::{AnimatedLayersResponse, AnimationDto, DlclStatus, EmptyRequest, FrameDto, StatusResponse, LayerPixelDto, PixelDto};
@@ -81,6 +84,7 @@ impl DlclDraw for DlclDrawService {
     async fn push_animations(&self, request: Request<Streaming<AnimationDto>>) -> Result<Response<StatusResponse>, Status> {
         let mut stream = request.into_inner();
 
+        // Closure for processing an animation
         let proc = |anim_dto: Result<AnimationDto, Status>| -> Result<(), Box<dyn Error>> {
             let anim_dto = anim_dto?;
             let anim = anim_dto.clone().into();
@@ -98,7 +102,7 @@ impl DlclDraw for DlclDrawService {
                 Err(err) => {
                     let err_msg = format!("Error while handling PushAnimation request: {}", err);
                     std::io::stderr().write(err_msg.as_bytes()).unwrap();
-                    status = DlclStatus::ErrorUndefined;
+                    status = DlclStatus::ErrorUndefined; // TODO: Add Specific Error
                     message = err_msg;
                     break;
                 }
@@ -113,7 +117,31 @@ impl DlclDraw for DlclDrawService {
     }
 
     async fn draw_on_layer(&self, request: Request<Streaming<LayerPixelDto>>) -> Result<Response<StatusResponse>, Status> {
-        todo!()
+
+        let mut status = DlclStatus::Success;
+        let mut stream = request.into_inner();
+        while let Some(pixel_dto) = stream.next().await {
+            let pixel_dto = pixel_dto.clone().unwrap();
+            let layer_id = pixel_dto.layer as usize;
+            if !self.layer_manager.lock().unwrap().layer_exists(layer_id) {
+                status = DlclStatus::ErrorUndefined;
+            }
+            else {
+                let pixels = pixel_dto.pixels;
+                pixels.iter().for_each(|p| {
+                    draw::draw_pixel_layer(
+                        Point::new(p.x as i32, p.y as i32),
+                        Rgb888::new(p.r as u8, p.g as u8, p.b as u8),
+                        self.layer_manager.lock().unwrap()
+                                .layer_by_id(layer_id).unbox_mut());
+                })
+            }
+        }
+        let response = StatusResponse {
+            status: status.into(),
+            message: String::new()
+        };
+        Ok(Response::new(response))
     }
 
     async fn draw_full_layer(&self, request: Request<FrameDto>) -> Result<Response<StatusResponse>, Status> {
