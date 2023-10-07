@@ -8,7 +8,7 @@ service DlclDraw {
 
   rpc DrawOnLayer(stream LayerPixelDTO) returns (StatusResponse);
 
-  rpc DrawFullLayer(FrameDTO) returns (StatusResponse);
+  rpc DrawFullLayer(DrawLayerRequest) returns (StatusResponse);
 
   rpc DrawDirect(stream PixelDTO) returns (StatusResponse);
 
@@ -41,7 +41,12 @@ message PixelDTO {
 }
 
 message LayerPixelDTO {
-  repeated PixelDTO pixels = 1;
+  PixelDTO pixel = 1;
+  uint32 layer = 2;
+}
+
+message DrawLayerRequest {
+  FrameDTO frame = 1;
   uint32 layer = 2;
 }
 
