@@ -2,12 +2,12 @@ using DlclRpc;
 
 namespace DlclNet.Models;
 
-public struct Pixel : IDTODerivable<PixelDTO>
+public struct Pixel : IDtoDerivable<PixelDTO>
 {
     public Position Position { get; set; }
     public Color Color { get; set; }
 
-    public PixelDTO ToDTO()
+    public PixelDTO ToDto()
     {
         var dto = new PixelDTO
         {

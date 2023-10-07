@@ -35,7 +35,7 @@ public class DlclClient
     /// <returns></returns>
     public async Task<StatusResponse> PushAnimationsAsync(List<Animation> animations, CancellationToken cancellationToken = default)
     {
-        var dtos = animations.ConvertAll(anim => anim.ToDTO());
+        var dtos = animations.ConvertAll(anim => anim.ToDto());
         using var call = _dlclDrawClient.PushAnimations(cancellationToken: cancellationToken);
         foreach (var dto in dtos)
         {
@@ -52,7 +52,7 @@ public class DlclClient
     }
     
     [Obsolete("Not yet implemented!")]
-    public async Task<StatusResponse> DrawFullLayer(Frame frame, uint layerId, CancellationToken cancellationToken = default)
+    public async Task<StatusResponse> DrawFullLayer(SingleFrame singleFrame, uint layerId, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
